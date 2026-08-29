@@ -1,0 +1,19 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Logs and temp
+*.log
+.tmp
+
+# Dependencies / caches
+node_modules/
+__pycache__/
+
+# AI Blueprint local workflow files
+.agents/
+.claude/
+blueprint/
+CLAUDE.md
