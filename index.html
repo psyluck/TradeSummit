@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="A non-custodial trading platform powered by Hyperliquid, USDC, and Qubic." />
+  <title>TradeSummit — Trade on a ledger you can trust</title>
+  <link rel="icon" type="image/svg+xml" href="assets/logos/tradesummit-mark.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="nav__inner">
+      <a href="#top" class="nav__brand">
+        <span class="nav__glyph"><img src="assets/logos/tradesummit-mark.svg" alt="TradeSummit logo" width="32" height="32" /></span>
+        <span class="nav__name">TradeSummit</span>
+      </a>
+      <nav class="nav__links" id="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#security">Security</a>
+        <a href="#cta" class="nav__link-cta">Get early access</a>
+      </nav>
+      <button class="nav__toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <section class="ticker" aria-label="Live cryptocurrency prices">
+    <div class="ticker__status" id="ticker-status">
+      <span class="ticker__dot" aria-hidden="true"></span>
+      <span>LIVE</span>
+    </div>
+    <div class="ticker__viewport">
+      <div class="ticker__track" id="ticker-track"></div>
+    </div>
+  </section>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero__glow" aria-hidden="true"></div>
+      <div class="hero__grid" aria-hidden="true"></div>
+      <div class="hero__inner">
+        <div class="hero__content">
+          <p class="hero__eyebrow">Settlement-grade trading infrastructure</p>
+          <h1>Trade on a ledger you can trust.</h1>
+          <p class="hero__sub">
+            A unified non-custodial trading floor for digital assets, with Hyperliquid
+            order execution, USDC liquidity, and Qubic compute underneath.
+          </p>
+          <div class="hero__actions">
+            <a href="#cta" class="btn btn--primary">Get early access</a>
+            <a href="#features" class="btn btn--ghost">Explore the platform</a>
+          </div>
+          <ul class="hero__meta">
+            <li>Hyperliquid L1</li>
+            <li>USDC settlement</li>
+            <li>Qubic-powered</li>
+          </ul>
+        </div>
+
+        <div class="term" role="img" aria-label="Live market terminal">
+          <div class="term__bar">
+            <span class="term__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="term__title">TRADESUMMIT<span class="term__title-accent">/TERMINAL</span></span>
+            <span class="term__clock" id="term-clock">--:-- UTC</span>
+          </div>
+          <div class="term__body">
+            <div class="term__col">
+              <div class="term__head"><span>SYMBOL</span><span>LAST</span><span>24H CHG</span></div>
+              <div class="term__rows" id="term-rows"></div>
+            </div>
+            <div class="term__col term__col--orderbook" aria-hidden="true">
+              <div class="term__head"><span>SYMBOL</span><span>BID</span><span>ASK</span></div>
+              <div class="term__rows" id="term-book"></div>
+            </div>
+          </div>
+          <div class="term__foot" id="term-foot"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="trustbar">
+      <p class="trustbar__label">Built on infrastructure you already trust</p>
+      <ul class="trustbar__items">
+        <li class="trustbar__logo">
+          <span class="logo-chip"><img src="assets/logos/hyperliquid.svg" alt="Hyperliquid" width="28" height="28" /></span>
+          Hyperliquid
+        </li>
+        <li class="trustbar__logo">
+          <span class="logo-chip"><img src="assets/logos/usdc.svg" alt="USDC" width="28" height="28" /></span>
+          USDC
+        </li>
+        <li>Qubic</li>
+        <li>IPFS-ready</li>
+        <li>Non-custodial</li>
+      </ul>
+    </section>
+
+    <section class="features" id="features">
+      <div class="section-head">
+        <p class="section-head__kicker">Everything the platform is</p>
+        <h2>Designed for settlement, engineered for speed.</h2>
+        <p class="section-head__lede">
+          Every tick, order, and transfer is a verifiable record — not a promise.
+        </p>
+      </div>
+      <div class="features__grid">
+        <article class="feature">
+          <h3>Atomic settlement</h3>
+          <p>Orders execute on-chain on Hyperliquid's L1 order book, so trade and settlement happen as one operation — no counterparty drift.</p>
+        </article>
+        <article class="feature">
+          <h3>USDC-native rails</h3>
+          <p>Settle in USDC for a stable unit of account, with fiat on/off ramps handled through sanctioned stablecoin liquidity.</p>
+        </article>
+        <article class="feature">
+          <h3>Qubic compute</h3>
+          <p>Offload matching, risk checks, and pre-trade analytics to Qubic's decentralized compute layer for low-latency decisioning.</p>
+        </article>
+        <article class="feature">
+          <h3>Provable audit trail</h3>
+          <p>Every state change is written to an immutable ledger with cryptographic linkage — auditable end to end, verifiable by anyone.</p>
+        </article>
+        <article class="feature">
+          <h3>Self-custody posture</h3>
+          <p>Keys remain under your control. The platform coordinates — it never holds what you own.</p>
+        </article>
+        <article class="feature">
+          <h3>Resilient by design</h3>
+          <p>Built on the BEAM's fault-tolerant runtime with supervised services, so redeploys and failures don't cost you a trade.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="how" id="how-it-works">
+      <div class="section-head">
+        <p class="section-head__kicker">How it works</p>
+        <h2>From order to record in three steps.</h2>
+      </div>
+      <ol class="how__steps">
+        <li class="step">
+          <span class="step__num">01</span>
+          <h3>Connect</h3>
+          <p>Bring liquidity from USDC pools and link your wallet or custody solution. Identity verified once, at the edge.</p>
+        </li>
+        <li class="step">
+          <span class="step__num">02</span>
+          <h3>Match</h3>
+          <p>Qubic compute evaluates risk and matches orders in real time, while Hyperliquid's asset engine tracks every position.</p>
+        </li>
+        <li class="step">
+          <span class="step__num">03</span>
+          <h3>Settle &amp; prove</h3>
+          <p>Settlement completes atomically in USDC. A signed, hash-linked receipt is written to the ledger — yours forever.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="security" id="security">
+      <div class="security__inner">
+        <div class="section-head section-head--left">
+          <p class="section-head__kicker">Security</p>
+          <h2>A ledger doesn't trust. Neither do we.</h2>
+        </div>
+        <ul class="security__list">
+          <li>On-chain execution on Hyperliquid's order book, with every order cryptographically signed and verifiable.</li>
+          <li>End-to-end signing with hardware keys and per-order authorization.</li>
+          <li>Independent verification of every settlement receipt.</li>
+          <li>No store of funds — the platform orchestrates, you remain custodian.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="cta" id="cta">
+      <div class="cta__inner">
+        <h2>Ready to trade on a ledger you can trust?</h2>
+        <p>Join the early access list. We'll be in touch before the first on-chain trading window opens.</p>
+        <form class="cta__form" id="waitlist-form">
+          <label class="sr-only" for="email">Email address</label>
+          <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email" />
+          <button type="submit" class="btn btn--primary">Request access</button>
+        </form>
+        <p class="cta__note" id="cta-note" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__inner">
+      <p class="footer__brand"><img src="assets/logos/tradesummit-mark.svg" alt="" width="20" height="20" /> TradeSummit</p>
+      <ul class="footer__links">
+        <li><a href="#top">Home</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#security">Security</a></li>
+      </ul>
+      <p class="footer__legal">&copy; <span id="year"></span> TradeSummit. Not investment advice. Digital asset trading involves risk.</p>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
