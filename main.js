@@ -247,7 +247,9 @@
   // hosted /app and /admin origins at deploy time.
   var devHosts = ["127.0.0.1", "localhost"];
   function wireDevProductLinks() {
-    if (devHosts.indexOf(window.location.hostname) === -1) return;
+    var onDevServer =
+      window.location.port === "8000" || devHosts.indexOf(window.location.hostname) !== -1;
+    if (!onDevServer) return;
     var explore = document.querySelector(".btn--ghost");
     if (explore && explore.textContent.indexOf("Explore the platform") !== -1) {
       explore.href = "http://127.0.0.1:5173/";
