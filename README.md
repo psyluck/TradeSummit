@@ -48,4 +48,4 @@ with verified fills.
 
 ## License
 
-Proprietary. All rights reserved.
+Proprietary. All rights reserved. See `LICENSE`.
