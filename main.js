@@ -240,4 +240,32 @@
   updateTicker();
   setInterval(updateTicker, 60000);
   setInterval(tickClock, 1000);
+
+  // Dev-only product navigation. The shipped artifact must stay free of
+  // absolute refs for IPFS, so these origins are wired at runtime only when
+  // the page is served from a local dev origin. Replace the origins with the
+  // hosted /app and /admin origins at deploy time.
+  var devHosts = ["127.0.0.1", "localhost"];
+  function wireDevProductLinks() {
+    if (devHosts.indexOf(window.location.hostname) === -1) return;
+    var explore = document.querySelector(".btn--ghost");
+    if (explore && explore.textContent.indexOf("Explore the platform") !== -1) {
+      explore.href = "http://127.0.0.1:5173/";
+      explore.target = "_blank";
+      explore.rel = "noopener";
+    }
+    var footer = document.querySelector(".footer__links");
+    if (footer && !footer.querySelector(".footer__op-link")) {
+      var li = document.createElement("li");
+      var link = document.createElement("a");
+      link.className = "footer__op-link";
+      link.href = "http://127.0.0.1:5174/";
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = "Operator console";
+      li.appendChild(link);
+      footer.appendChild(li);
+    }
+  }
+  wireDevProductLinks();
 })();
