@@ -1,13 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CONFIG="$ROOT/scripts/config.json"
-IPFS_BIN="${IPFS:-ipfs}"
-
-[ -f "$CONFIG" ] || { echo "publish: no $CONFIG" >&2; exit 1; }
-IPFS_REPO="$ROOT/$(jq -r '.ipfsRepo' "$CONFIG")"
-CID_FILE="$ROOT/$(jq -r '.cidFile' "$CONFIG")"
+source "$(dirname "${BASH_SOURCE[0]}")/_config.sh"
 
 if [ ! -f "$CID_FILE" ]; then
   echo "publish: no $CID_FILE; run ./scripts/build.sh first" >&2

@@ -1,15 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CONFIG="$ROOT/scripts/config.json"
-IPFS_BIN="${IPFS:-ipfs}"
-
-[ -f "$CONFIG" ] || { echo "build: no $CONFIG" >&2; exit 1; }
-DIST="$ROOT/$(jq -r '.distDir' "$CONFIG")"
-IPFS_REPO="$ROOT/$(jq -r '.ipfsRepo' "$CONFIG")"
-CID_FILE="$ROOT/$(jq -r '.cidFile' "$CONFIG")"
-LAST_CID="$(dirname "$CID_FILE")/last-cid.txt"
+source "$(dirname "${BASH_SOURCE[0]}")/_config.sh"
 
 FORCE=0
 for arg in "$@"; do
@@ -77,7 +69,7 @@ if [ ! -d "$IPFS_REPO" ]; then
   mkdir -p "$IPFS_REPO"
   IPFS_PATH="$IPFS_REPO" "$IPFS_BIN" init --empty-repo >/dev/null 2>&1
 fi
-CID="$(IPFS_PATH="$IPFS_REPO" "$IPFS_BIN" add -r --quieter --cid-version=1 --hash=sha2-256 --pin=false "$DIST")"
+CID="$(IPFS_PATH="$IPFS_REPO" "$IPFS_BIN" add -r --quieter --cid-version=1 --hash=sha2-256 --raw-leaves=true --chunker=size-262144 --pin=false "$DIST")"
 printf '%s\n' "$CID" > "$CID_FILE"
 
 # Drift guard against the last published CID; the first run just records it
