@@ -1,0 +1,10 @@
+{
+  "domain": "tradesummit.crypto",
+  "distDir": "scripts/out/dist",
+  "cidFile": "scripts/out/cid.txt",
+  "ipfsRepo": "scripts/out/ipfs-repo",
+  "gateways": {
+    "local": "http://127.0.0.1:8080",
+    "public": "https://dweb.link"
+  }
+}

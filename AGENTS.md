@@ -35,11 +35,15 @@ from an Unstoppable Domain without a backend.
 ## Commands
 
 - Dev server: `python3 -m http.server 8000` (open http://localhost:8000)
-- Build: none (static site)
+- Build: `./scripts/build.sh` (stages the six site paths from git HEAD, preflight-checks, computes IPFS CID, writes to `scripts/out/dist/`)
+- Publish: `./scripts/publish.sh` (pins the CID into the local kubo repo and lists pins)
+- Check: `./scripts/check.sh` (requires `build` + `publish`; fetches the pinned CID from the local node gateway and the public gateway in `scripts/config.json`, asserting HTTP 200 + doctype)
+- Runbook: `scripts/runbook-UD.md` (Unstoppable Domain claim, IPFS record, resolution check; paid/account steps marked manual)
 - Production server: static hosting (IPFS, nginx, or CDN)
 - Lint: none configured
 - Format: none configured
 - Tests: no unit test runner configured; the test gate is off
+- Verify: `./scripts/check.sh`
 
 ## Commit rules
 

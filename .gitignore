@@ -17,3 +17,6 @@ __pycache__/
 .claude/
 blueprint/
 CLAUDE.md
+
+# Deploy pipeline build output
+scripts/out/
