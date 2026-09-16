@@ -82,15 +82,14 @@ h1, h2, h3 {
   place-items: center;
   width: 32px;
   height: 32px;
-  border-radius: 50%;
-  overflow: hidden;
   line-height: 0;
 }
 
 .nav__glyph img {
   display: block;
-  width: 32px;
-  height: 32px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .nav__links {
@@ -108,6 +107,27 @@ h1, h2, h3 {
 .nav__link-cta {
   color: var(--jade-300) !important;
   font-weight: 600;
+}
+
+.nav__launch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 18px;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--jade-400), var(--jade-600));
+  color: var(--noir-900);
+  box-shadow: 0 6px 18px rgba(18, 169, 124, 0.35);
+  white-space: nowrap;
+}
+
+.nav__launch:hover {
+  box-shadow: 0 8px 24px rgba(18, 169, 124, 0.5);
+  transform: translateY(-1px);
 }
 
 .nav__toggle {
@@ -157,6 +177,13 @@ h1, h2, h3 {
 
   .nav__toggle {
     display: flex;
+  }
+}
+
+@media (max-width: 560px) {
+  .nav__launch {
+    padding: 8px 14px;
+    font-size: 13px;
   }
 }
 
@@ -930,7 +957,10 @@ section[id] {
 }
 
 .footer__brand img {
-  border-radius: 50%;
+  display: block;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }
 
 .footer__links {

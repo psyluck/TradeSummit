@@ -69,6 +69,17 @@
     { id: "toncoin", sym: "TON" }
   ];
 
+  var orderBookAssets = [
+    { id: "bitcoin", sym: "BTC" },
+    { sym: "SPX" },
+    { id: "ethereum", sym: "ETH" },
+    { sym: "AAPL" },
+    { sym: "GOLD" },
+    { id: "hyperliquid", sym: "HYPE" },
+    { id: "solana", sym: "SOL" },
+    { id: "ripple", sym: "XRP" }
+  ];
+
   var snapshot = {
     BTC: { price: 64200.5, change: 2.31 },
     ETH: { price: 3421.8, change: 1.12 },
@@ -84,6 +95,12 @@
     TRX: { price: 0.132, change: 0.2 },
     LTC: { price: 71.4, change: -0.6 },
     TON: { price: 5.42, change: 2.5 }
+  };
+
+  var rwaPerps = {
+    SPX: { price: 5620.4, change: 0.62 },
+    AAPL: { price: 224.18, change: -0.31 },
+    GOLD: { price: 2411.2, change: 0.44 }
   };
 
   function formatPrice(n) {
@@ -125,7 +142,7 @@
   }
 
   function quoteFor(prices, sym) {
-    return (prices && prices[sym]) || snapshot[sym] || { price: 0, change: 0 };
+    return (prices && prices[sym]) || snapshot[sym] || rwaPerps[sym] || { price: 0, change: 0 };
   }
 
   function renderTerm(prices, live) {
@@ -148,7 +165,7 @@
 
     var book = document.getElementById("term-book");
     if (book) {
-      book.innerHTML = list.slice(0, 4).map(function (a, i) {
+      book.innerHTML = orderBookAssets.map(function (a, i) {
         var q = quoteFor(prices, a.sym);
         var bid = q.price * (1 - 0.0008 - i * 0.0004);
         var ask = q.price * (1 + 0.0008 + i * 0.0004);
@@ -255,6 +272,12 @@
       explore.href = "http://127.0.0.1:5173/";
       explore.target = "_blank";
       explore.rel = "noopener";
+    }
+    var launch = document.querySelector(".nav__launch");
+    if (launch) {
+      launch.href = "http://127.0.0.1:5173/";
+      launch.target = "_blank";
+      launch.rel = "noopener";
     }
     var footer = document.querySelector(".footer__links");
     if (footer && !footer.querySelector(".footer__op-link")) {
