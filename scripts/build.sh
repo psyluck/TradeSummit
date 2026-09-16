@@ -22,21 +22,22 @@ fi
 rm -rf "$DIST"
 mkdir -p "$DIST"
 
-# Stage the six shipped paths from the committed tree (scripts/ is tooling,
+# Stage the seven shipped paths from the committed tree (scripts/ is tooling,
 # never part of the package)
 git -C "$ROOT" archive HEAD index.html styles.css main.js assets/logos | tar -x -C "$DIST"
 
 EXPECTED="assets/logos/hyperliquid.svg
 assets/logos/tradesummit-mark.svg
+assets/logos/tradesummit.png
 assets/logos/usdc.svg
 index.html
 main.js
 styles.css"
 
-# Preflight (a): staged set must be exactly the six shipped files
+# Preflight (a): staged set must be exactly the seven shipped files
 STAGED="$(cd "$DIST" && find . -type f | sort | sed 's|^\./||')"
 if [ "$STAGED" != "$EXPECTED" ]; then
-  echo "preflight failed: staged file set is not the six shipped files" >&2
+  echo "preflight failed: staged file set is not the seven shipped files" >&2
   diff <(printf '%s\n' "$EXPECTED") <(printf '%s\n' "$STAGED") >&2 || true
   exit 1
 fi
