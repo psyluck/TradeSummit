@@ -37,9 +37,10 @@ from an Unstoppable Domain without a backend.
 - Dev server: `python3 -m http.server 8000` (open http://localhost:8000)
 - Build: `./scripts/build.sh` (stages the six site paths from git HEAD, preflight-checks, computes IPFS CID, writes to `scripts/out/dist/`)
 - Publish: `./scripts/publish.sh` (pins the CID into the local kubo repo and lists pins)
+- DNSLink: `CF_API_TOKEN=... ./scripts/dnslink.sh` (upserts the `_dnslink.tradesummit.online` TXT record to the new CID; requires `cloudflare.zoneId` in `scripts/config.json`)
 - Check: `./scripts/check.sh` (requires `build` + `publish`; fetches the pinned CID from the local node gateway and the public gateway in `scripts/config.json`, asserting HTTP 200 + doctype)
-- Runbook: `scripts/runbook-UD.md` (Unstoppable Domain claim, IPFS record, resolution check; paid/account steps marked manual)
-- Production server: static hosting (IPFS, nginx, or CDN)
+- Runbook: `scripts/runbook-Cloudflare.md` (Cloudflare zone, IPFS gateway, DNSLink record, resolution check; paid/account steps marked manual). Legacy UD path: `scripts/runbook-UD.md`
+- Production server: Cloudflare IPFS gateway on `tradesummit.online` (DNSLink-driven); the legacy alias was Unstoppable Domains `tradesummit.crypto`
 - Lint: none configured
 - Format: none configured
 - Tests: no unit test runner configured; the test gate is off

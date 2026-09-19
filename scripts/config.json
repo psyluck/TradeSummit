@@ -1,10 +1,21 @@
 {
-  "domain": "tradesummit.crypto",
+  "domain": "tradesummit.online",
   "distDir": "scripts/out/dist",
   "cidFile": "scripts/out/cid.txt",
   "ipfsRepo": "scripts/out/ipfs-repo",
   "gateways": {
     "local": "http://127.0.0.1:8080",
     "public": "https://dweb.link"
+  },
+  "cloudflare": {
+    "zoneId": "bedfcbc58d1fbb6a21fc06a79ccd8472",
+    "dnslinkHost": "tradesummit.online",
+    "gatewayHost": "www.tradesummit.online"
+  },
+  "pinning": {
+    "provider": "pinata",
+    "apiBase": "https://api.pinata.cloud",
+    "uploadEndpoint": "/pinning/pinFileToIPFS",
+    "gatewayBase": "https://gateway.pinata.cloud"
   }
 }

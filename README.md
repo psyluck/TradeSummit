@@ -7,7 +7,8 @@ settled exclusively in USDC.
   verifiable operation with no custody in the middle
 - Settlement exclusively in USDC, unified across chains
 - A hard 10x leverage cap keeps the platform structurally conservative
-- Landing site served from IPFS via an Unstoppable Domain (`tradesummit.crypto`)
+- Landing site served from IPFS via Cloudflare's IPFS gateway on
+  `tradesummit.online`
 
 ## Repository
 
@@ -27,6 +28,7 @@ Requires the kubo IPFS node (Arch package: `omarchy pkg add kubo`).
 ```sh
 ./scripts/build.sh    # stage the six shipped files, preflight, compute the CID
 ./scripts/publish.sh  # pin the CID into the local kubo repo
+CF_API_TOKEN=... ./scripts/dnslink.sh   # point the .online DNSLink record at the CID
 ./scripts/check.sh    # fetch the CID from the local + public gateway (HTTP 200 + doctype)
 ```
 
@@ -35,8 +37,10 @@ The pipeline is reproducible: identical content produces an identical CID
 across a clean checkout. `scripts/out/` holds build output and the dedicated
 kubo repo and is gitignored.
 
-Deployment steps (Unstoppable Domain claim, IPFS record, resolution check) are
-in `scripts/runbook-UD.md`; paid and account-based steps are marked manual.
+Deployment steps (Cloudflare zone + gateway setup, DNSLink record, resolution
+check) are in `scripts/runbook-Cloudflare.md`; paid and account-based steps are
+marked manual. The archived Unstoppable Domains runbook
+(`scripts/runbook-UD.md`) documents the legacy `tradesummit.crypto` path.
 
 ## Roadmap
 

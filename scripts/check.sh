@@ -6,6 +6,13 @@ source "$(dirname "${BASH_SOURCE[0]}")/_config.sh"
 OUT="$(dirname "$CID_FILE")"
 [ -f "$CID_FILE" ] || { echo "check: no $CID_FILE; run ./scripts/build.sh first" >&2; exit 1; }
 CID="$(cat "$CID_FILE")"
+# Local CID is what kubo pinned; the public/routing legs use the remote CID
+# from pin-remote.sh when one exists (the only CID guaranteed publicly
+# retrievable), otherwise they fall back to the local CID.
+PUBLIC_CID="$CID"
+if [ -f "$REMOTE_CID_FILE" ] && [ -s "$REMOTE_CID_FILE" ]; then
+  PUBLIC_CID="$(cat "$REMOTE_CID_FILE")"
+fi
 command -v "$IPFS_BIN" >/dev/null 2>&1 || { echo "check: kubo not found" >&2; exit 1; }
 [ -f "$IPFS_REPO/config" ] || { echo "check: no local repo at $IPFS_REPO; run ./scripts/build.sh first" >&2; exit 1; }
 
@@ -40,19 +47,22 @@ done
 # The check still requires the final HTTP 200 plus the HTML doctype, so a wrong CID
 # or a redirect to an error page fails instead of passing.
 check_gateway() {
-  local name="$1" base="$2"
+  local name="$1" base="$2" want="$3"
   local body code
   body="$(mktemp)"
-  code="$(curl -sL --max-redirs 5 --max-time 45 -w '%{http_code}' -o "$body" "$base/ipfs/$CID/index.html")"
+  code="$(curl -sL --max-redirs 5 --max-time 45 -w '%{http_code}' -o "$body" "$base/ipfs/$want/index.html")"
   if [ "$code" != "200" ] || ! grep -qi '^<!doctype html' "$body"; then
     rm -f "$body"
-    echo "check failed: $name gateway returned HTTP $code at $base/ipfs/$CID/index.html" >&2
+    echo "check failed: $name gateway returned HTTP $code at $base/ipfs/$want/index.html" >&2
     return 1
   fi
   rm -f "$body"
-  echo "ok: $name gateway served /ipfs/$CID/index.html (HTTP 200, doctype present)"
+  echo "ok: $name gateway served /ipfs/$want/index.html (HTTP 200, doctype present)"
 }
 
-check_gateway "local" "$LOCAL_GATEWAY"
-check_gateway "public" "$PUBLIC_GATEWAY"
-echo "ok: both gateways verified for CID $CID"
+check_gateway "local" "$LOCAL_GATEWAY" "$CID"
+if [ -f "$REMOTE_CID_FILE" ] && [ -s "$REMOTE_CID_FILE" ]; then
+  check_gateway "pinata" "$PIN_GATEWAY_BASE" "$PUBLIC_CID"
+fi
+check_gateway "public" "$PUBLIC_GATEWAY" "$PUBLIC_CID"
+echo "ok: gateways verified (local $CID, public $PUBLIC_CID)"
