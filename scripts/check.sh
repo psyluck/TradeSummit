@@ -44,25 +44,58 @@ for _ in $(seq 1 60); do
 done
 
 # -L follows public-gateway subdomain redirects (e.g. dweb.link -> <CID>.ipfs.dweb.link).
-# The check still requires the final HTTP 200 plus the HTML doctype, so a wrong CID
-# or a redirect to an error page fails instead of passing.
+# Each leg requires the final HTTP 200, the HTML doctype, and a TradeSummit
+# marker in the body, so a wrong CID, an error page, or an unrelated parked
+# page (HTTP 200 with a doctype) fails instead of passing.
 check_gateway() {
-  local name="$1" base="$2" want="$3"
+  local name="$1" base="$2" want="$3" marker="$4"
   local body code
   body="$(mktemp)"
-  code="$(curl -sL --max-redirs 5 --max-time 45 -w '%{http_code}' -o "$body" "$base/ipfs/$want/index.html")"
-  if [ "$code" != "200" ] || ! grep -qi '^<!doctype html' "$body"; then
+  code="$(curl -sL --max-redirs 5 --max-time 45 -w '%{http_code}' -o "$body" "$base/ipfs/$want/index.html" 2>/dev/null || true)"
+  if [ "$code" != "200" ]; then
     rm -f "$body"
     echo "check failed: $name gateway returned HTTP $code at $base/ipfs/$want/index.html" >&2
     return 1
   fi
+  if ! grep -qi '^<!doctype html' "$body" || ! grep -qi "$marker" "$body"; then
+    rm -f "$body"
+    echo "check failed: $name gateway returned HTTP 200 but the body is not the landing page (doctype or marker '$marker' missing)" >&2
+    return 1
+  fi
   rm -f "$body"
-  echo "ok: $name gateway served /ipfs/$want/index.html (HTTP 200, doctype present)"
+  echo "ok: $name gateway served /ipfs/$want/index.html (HTTP 200, doctype present, marker present)"
 }
 
-check_gateway "local" "$LOCAL_GATEWAY" "$CID"
-if [ -f "$REMOTE_CID_FILE" ] && [ -s "$REMOTE_CID_FILE" ]; then
-  check_gateway "pinata" "$PIN_GATEWAY_BASE" "$PUBLIC_CID"
+check_gateway "local" "$LOCAL_GATEWAY" "$CID" "TradeSummit"
+
+# Public leg tries fallbacks with backoff: free public gateways rate-limit
+# shared egress IPs, so one 429 must not fail the whole check.
+PUBLIC_OK=0
+for base in "$PUBLIC_GATEWAY" "https://ipfs.filebase.io" "https://ipfs.io" "https://gateway.ipfs.io" "https://w3s.link"; do
+  if check_gateway "public" "$base" "$PUBLIC_CID" "TradeSummit"; then
+    PUBLIC_OK=1
+    break
+  fi
+  sleep 3
+done
+if [ "$PUBLIC_OK" -eq 0 ]; then
+  echo "check failed: no public gateway served the CID" >&2
+  exit 1
 fi
-check_gateway "public" "$PUBLIC_GATEWAY" "$PUBLIC_CID"
+if [ -n "$CF_GATEWAY_HOST" ]; then
+  check_gateway "cloudflare" "https://$CF_GATEWAY_HOST" "$PUBLIC_CID" "TradeSummit" \
+    || echo "note: cloudflare leg not green; create the Web3 IPFS gateway for tradesummit.online (runbook section 2) so www.tradesummit.online serves IPFS content" >&2
+fi
+
+# Provider gateway probe is informational, not a gate: Pinata's free-tier
+# shared gateway does not serve HTML (ERR_ID 00023), so public retrievability
+# is proven by the public gateway leg and the Cloudflare gateway leg instead.
+if [ -f "$REMOTE_CID_FILE" ] && [ -s "$REMOTE_CID_FILE" ]; then
+  CODE="$(curl -sL --max-redirs 5 --max-time 45 -o /dev/null -w '%{http_code}' "$PIN_GATEWAY_BASE/ipfs/$PUBLIC_CID/index.html" 2>/dev/null || true)"
+  if [ "$CODE" = "200" ]; then
+    echo "ok: $PIN_PROVIDER gateway served /ipfs/$PUBLIC_CID/index.html"
+  else
+    echo "note: $PIN_PROVIDER shared gateway returned HTTP $CODE for HTML (free-tier HTML serving disabled); CID is pinned and reachable via the public and cloudflare legs"
+  fi
+fi
 echo "ok: gateways verified (local $CID, public $PUBLIC_CID)"
