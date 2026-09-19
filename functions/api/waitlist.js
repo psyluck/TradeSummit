@@ -3,7 +3,7 @@ const ALLOWED_ORIGINS = ["https://tradesummit.online", "https://www.tradesummit.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function onRequestPost(context) {
-  const { request } = context;
+  const { request, env } = context;
   const origin = request.headers.get("Origin") || "";
 
   let body;
