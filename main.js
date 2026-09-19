@@ -18,18 +18,46 @@
 
   var form = document.getElementById("waitlist-form");
   var note = document.getElementById("cta-note");
+  var WAITLIST_ENDPOINT = "/api/waitlist";
   if (form) {
     form.addEventListener("submit", function (event) {
       event.preventDefault();
+      var button = form.querySelector("button[type=submit]");
       var email = document.getElementById("email").value.trim();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         note.textContent = "Please enter a valid email address.";
         note.className = "cta__note cta__note--err";
         return;
       }
-      note.textContent = "You're on the list. We'll reach out before the first trading window opens.";
-      note.className = "cta__note cta__note--ok";
-      form.reset();
+      var payload = { email: email, source: "landing" };
+      if (document.referrer) {
+        payload.referrer = document.referrer;
+      }
+      if (button) {
+        button.disabled = true;
+      }
+      fetch(WAITLIST_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+        .then(function (response) {
+          if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+          }
+          note.textContent = "You're on the list. We'll reach out before the first trading window opens.";
+          note.className = "cta__note cta__note--ok";
+          form.reset();
+        })
+        .catch(function () {
+          note.textContent = "Sorry, we couldn't save that just now. Please try again in a moment.";
+          note.className = "cta__note cta__note--err";
+        })
+        .finally(function () {
+          if (button) {
+            button.disabled = false;
+          }
+        });
     });
   }
 

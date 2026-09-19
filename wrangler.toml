@@ -1,0 +1,9 @@
+name = "tradesummit-landing"
+compatibility_date = "2026-01-01"
+pages_build_output_dir = "scripts/out/dist"
+account_id = "7a6c6c778a4029cc318161f430ebae8d"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tradesummit-waitlist"
+database_id = "449b1f26-c239-43ce-b06f-f981940c8065"
