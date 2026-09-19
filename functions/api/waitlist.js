@@ -3,22 +3,8 @@ const ALLOWED_ORIGINS = ["https://tradesummit.online", "https://www.tradesummit.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function onRequestPost(context) {
-  const { request, env } = context;
+  const { request } = context;
   const origin = request.headers.get("Origin") || "";
-
-  if (request.method === "OPTIONS") {
-    return cors(new Response(null, { status: 204 }), origin);
-  }
-
-  if (!request.method) {
-    return cors(
-      new Response(JSON.stringify({ error: "method_not_allowed" }), {
-        status: 405,
-        headers: { "Content-Type": "application/json" },
-      }),
-      origin
-    );
-  }
 
   let body;
   try {
@@ -76,8 +62,17 @@ export async function onRequestPost(context) {
   }
 }
 
+export async function onRequestOptions(context) {
+  const origin = context.request.headers.get("Origin") || "";
+  const res = new Response(null, { status: 204 });
+  res.headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.headers.set("Access-Control-Allow-Headers", "Content-Type");
+  res.headers.set("Access-Control-Max-Age", "86400");
+  return cors(res, origin);
+}
+
 export async function onRequest(context) {
-  const { request, env } = context;
+  const { request } = context;
   const origin = request.headers.get("Origin") || "";
   return cors(
     new Response(JSON.stringify({ error: "method_not_allowed" }), {
