@@ -66,6 +66,27 @@ check_gateway() {
   echo "ok: $name gateway served /ipfs/$want/index.html (HTTP 200, doctype present, marker present)"
 }
 
+# Cloudflare Pages serves the site at root paths (no /ipfs/<CID>/ prefix), so
+# its leg fetches the custom-domain root and asserts the same page markers.
+check_pages() {
+  local name="$1" base="$2" marker="$3"
+  local body code
+  body="$(mktemp)"
+  code="$(curl -sL --max-redirs 5 --max-time 45 -w '%{http_code}' -o "$body" "$base/index.html" 2>/dev/null || true)"
+  if [ "$code" != "200" ]; then
+    rm -f "$body"
+    echo "check failed: $name returned HTTP $code at $base/index.html" >&2
+    return 1
+  fi
+  if ! grep -qi '^<!doctype html' "$body" || ! grep -qi "$marker" "$body"; then
+    rm -f "$body"
+    echo "check failed: $name returned HTTP 200 but the body is not the landing page (doctype or marker '$marker' missing)" >&2
+    return 1
+  fi
+  rm -f "$body"
+  echo "ok: $name served /index.html (HTTP 200, doctype present, marker present)"
+}
+
 check_gateway "local" "$LOCAL_GATEWAY" "$CID" "TradeSummit"
 
 # Public leg tries fallbacks with backoff: free public gateways rate-limit
@@ -83,8 +104,8 @@ if [ "$PUBLIC_OK" -eq 0 ]; then
   exit 1
 fi
 if [ -n "$CF_GATEWAY_HOST" ]; then
-  check_gateway "cloudflare" "https://$CF_GATEWAY_HOST" "$PUBLIC_CID" "TradeSummit" \
-    || echo "note: cloudflare leg not green; create the Web3 IPFS gateway for tradesummit.online (runbook section 2) so www.tradesummit.online serves IPFS content" >&2
+  check_pages "cloudflare" "https://$CF_GATEWAY_HOST" "TradeSummit" \
+    || echo "note: cloudflare leg not green; expected a Cloudflare Pages project serving the dist on www.tradesummit.online" >&2
 fi
 
 # Provider gateway probe is informational, not a gate: Pinata's free-tier
