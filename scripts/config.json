@@ -8,14 +8,15 @@
     "public": "https://dweb.link"
   },
   "cloudflare": {
-    "zoneId": "bedfcbc58d1fbb6a21fc06a79ccd8472",
+    "zoneId": "bedfcbc58d1fbb6a21fc06a79c4f04b5",
     "dnslinkHost": "tradesummit.online",
     "gatewayHost": "www.tradesummit.online"
   },
   "pinning": {
     "provider": "pinata",
-    "apiBase": "https://api.pinata.cloud",
-    "uploadEndpoint": "/pinning/pinFileToIPFS",
+    "apiBase": "https://uploads.pinata.cloud",
+    "uploadEndpoint": "/v3/files",
+    "network": "public",
     "gatewayBase": "https://gateway.pinata.cloud"
   }
 }

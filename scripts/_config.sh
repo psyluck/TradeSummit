@@ -32,6 +32,7 @@ DOMAIN="$(jq -r '.domain' "$CONFIG")"
 PIN_PROVIDER="$(jq -r '.pinning.provider // empty' "$CONFIG")"
 PIN_API_BASE="$(jq -r '.pinning.apiBase // empty' "$CONFIG")"
 PIN_UPLOAD_ENDPOINT="$(jq -r '.pinning.uploadEndpoint // empty' "$CONFIG")"
+PIN_NETWORK="$(jq -r '.pinning.network // "public"' "$CONFIG")"
 PIN_GATEWAY_BASE="$(jq -r '.pinning.gatewayBase // empty' "$CONFIG")"
 REMOTE_CID_FILE="$(dirname "$CID_FILE")/remote-cid.txt"
 

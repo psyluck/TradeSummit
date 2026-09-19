@@ -3,11 +3,13 @@
 # (default Pinata) and record the remote CID as the canonical one for the
 # DNSLink record and the public gateway check.
 #
-# The remote upload is what makes the CID publicly retrievable: Cloudflare's
-# IPFS gateway and public gateways can then fetch content even though the local
-# kubo node is not reachable from the public network. The remote CID becomes
-# the published identity; the local kubo pin (from publish.sh) remains for
-# local recovery and bit-level comparison.
+# Uploads through the Pinata v3 Files API (uploads.pinata.cloud/v3/files): one
+# `file` part per staged file with its relative path in the filename, plus
+# `network=public`, which yields the same directory DAG kubo computes, so the
+# remote CID matches the local build CID byte for byte. The legacy
+# /pinning/pinFileToIPFS endpoint rejects multi-entry directory uploads. The
+# remote upload is what makes the CID publicly retrievable; the local kubo pin
+# (from publish.sh) remains for local recovery and bit-level comparison.
 set -euo pipefail
 
 source "$(dirname "${BASH_SOURCE[0]}")/_config.sh"
@@ -26,16 +28,15 @@ fi
 FILES="$(cd "$DIST" && find . -type f | sort | sed 's|^\./||')"
 [ -n "$FILES" ] || { echo "pin-remote: no files to upload" >&2; exit 1; }
 
-ARGS=(-sS --fail-with-body --max-time 600 -H "Authorization: Bearer $PINATA_JWT")
+ARGS=(-sS --fail-with-body --max-time 600 -H "Authorization: Bearer $PINATA_JWT" -F "network=$PIN_NETWORK")
 while IFS= read -r rel; do
   [ -n "$rel" ] || continue
   ARGS+=(-F "file=@$DIST/$rel;filename=$rel")
 done <<<"$FILES"
-ARGS+=(-F "pinataOptions={\"wrapWithDirectory\":true,\"cidVersion\":1}")
-ARGS+=(-F "pinataMetadata={\"name\":\"$DOMAIN landing\"}")
+ARGS+=(-F "name=$DOMAIN landing")
 
 RESP="$(curl "${ARGS[@]}" "$PIN_API_BASE$PIN_UPLOAD_ENDPOINT")"
-REMOTE="$(jq -r '.IpfsHash // empty' <<<"$RESP")"
+REMOTE="$(jq -r '.data.cid // empty' <<<"$RESP")"
 if [ -z "$REMOTE" ]; then
   echo "pin-remote: upload failed; response:" >&2
   printf '%s\n' "$RESP" >&2
