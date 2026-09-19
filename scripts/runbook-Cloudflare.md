@@ -1,11 +1,12 @@
-# TradeSummit: Cloudflare DNSLink runbook
+# TradeSummit: Cloudflare Pages runbook
 
-Serve the landing page from `tradesummit.online` over HTTPS using Cloudflare's
-IPFS gateway. The domain resolves through Cloudflare's edge to the CID pinned
-by `scripts/publish.sh`, so repointing it only takes a config file plus the
-post-publish step updating a DNS record. Domain, zone, and gateway hostnames
-all come from [`scripts/config.json`](config.json); change them there, not in
-the scripts.
+Serve the landing page from `tradesummit.online` (apex) and
+`www.tradesummit.online` over HTTPS using Cloudflare Pages (free tier). The
+released package is uploaded once per deploy as a Pages deployment from the
+publicly pinned CID staged by `scripts/build.sh`; the CID/IPFS layer stays the
+canonical artifact (verifiable, immutable) while Pages does the serving.
+Domain, zone, and hostnames all come from [`scripts/config.json`](config.json);
+change them there, not in the scripts.
 
 Steps that need money or an outside account are labeled **MANUAL (paid)** or
 **MANUAL (account)**. Everything not labeled is local and automated by script.
@@ -13,10 +14,18 @@ Steps that need money or an outside account are labeled **MANUAL (paid)** or
 ## Prereqs
 
 - Cloudflare account with the zone added (MANUAL account), verified ownership.
-- `./scripts/build.sh` green (stages the six shipped files, preflight-checks,
+- `./scripts/build.sh` green (stages the seven shipped files, preflight-checks,
   computes the CID).
 - `./scripts/publish.sh` green (pins the CID into the local repo).
 - `scripts/config.json` has `cloudflare.zoneId` set and `CF_API_TOKEN` exported.
+- For Pages deploys, a Pages-capable token: put `CF_PAGES_TOKEN='...'` in
+  `scripts/out/cf.env` (git-ignored, mode 600) next to the existing
+  `CF_API_TOKEN`.
+
+Why Pages instead of the old plan: Cloudflare's Web3 IPFS gateway no longer
+accepts new signups, and free public IPFS gateways (Pinata shared, dweb.link)
+either rate-limit or refuse to serve HTML. Pages is free, first-party, and
+serves the same `dist/` bytes over a clean HTTPS host.
 
 ## 0. Move DNS to Cloudflare - MANUAL (account)
 
@@ -33,100 +42,96 @@ Steps that need money or an outside account are labeled **MANUAL (paid)** or
   overview page and write it into `cloudflare.zoneId` in
   `scripts/config.json`.
 
-## 1. Register the DNSLink record - MANUAL (account), one time
+## 1. Create the Pages project - one time
 
-Cloudflare's IPFS gateway reads the `_dnslink.<host>` TXT record in the zone
-to learn which CID to serve. Record it once; every subsequent deploy updates
-it via the automated step.
+The Pages project is a direct-upload (non-git) project named after this repo
+(`tradesummit-landing`), served at `tradesummit-landing.pages.dev`.
 
-- **MANUAL (account)** In the Cloudflare dashboard open the zone, go to
-  "DNS > Records" and add:
-  - Type: `TXT`
-  - Name: `_dnslink` (Cloudflare appends the zone so it becomes
-    `_dnslink.tradesummit.online`)
-  - Content: `dnslink=/ipfs/<CID>` with the CID from `scripts/out/cid.txt`
-  - TTL: `Auto` (the automated step below sets 120; either is fine, the deploy
-    step overwrites it)
+- `POST /accounts/{account_id}/pages/projects` with
+  `{"name":"tradesummit-landing","production_branch":"main"}` using the
+  `CF_PAGES_TOKEN`.
+- The account id lives in the Pages token's scope; find it in the dashboard
+  (Workers & Pages > account) or reuse the one in `scripts/out/cf.env`.
 
-Alternatively, run `./scripts/dnslink.sh` once with the zone id and token set;
-it creates the record if missing. Either path ends with the TXT record present.
+## 2. Deploy the staged package
 
-## 2. Create the IPFS gateway - MANUAL (account), one time
+Each release is an HTTP upload of the same bytes `build.sh` staged and the
+same CID Pinata serves:
 
-- **MANUAL (account)** In the Cloudflare dashboard open the zone, go to
-  "Web3", click Create Gateway:
-  - Hostname: `www.tradesummit.online` (a subdomain of the zone; the apex can
-    forward to it)
-  - Type: IPFS
-  - DNSLink: `/ipns/tradesummit.online` points the gateway at the DNSLink
-    record above. (If you set this to a bare `/ipfs/<CID>` the gateway serves
-    that CID directly and ignores the TXT record; use the `/ipns/` form so the
-    TXT record drives which CID is served.)
-- This creates a proxied `CNAME` to `ipfs.cloudflare.com` plus the TXT record
-  expected by the gateway.
+- `npx wrangler pages deploy scripts/out/dist --project-name tradesummit-landing
+  --branch main` (needs `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`
+  exported from `scripts/out/cf.env`). Wrangler owns the hashed-asset upload
+  flow and prints the deployment URL, e.g.
+  `https://de575b86.tradesummit-landing.pages.dev`.
+- Requires the project from step 1 to already exist; wrangler creates it only
+  if the name is free.
+- The deploy updates the production deployment, so the `*.pages.dev` alias
+  (`https://tradesummit-landing.pages.dev`) serves the new bytes immediately.
 
-## 3. Point the apex at the gateway - MANUAL (account), one time
+## 3. Attach custom domains - one time
 
-- **MANUAL (account)** In the Cloudflare "Rules > Redirect Rules" (or the
-  classic "Forwarding URL" Page Rule):
-  - From: `tradesummit.online/*`
-  - To: `https://www.tradesummit.online$1` (301 permanent)
-- Alternatively point the apex directly at the gateway with a proxied
-  `CNAME`-flattened record; the redirect keeps the URL on the `www` hostname.
-
-### 3.5 Pin the package to a free pinning service (required for public checks)
-
-The local kubo pin is on a private node: not reachable from Cloudflare's edge
-or public gateways, so serving `_dnslink` would 404. `./scripts/pin-remote.sh`
-uploads the staged package to the free Pinata tier, making its CID publicly
-retrievable. That remote CID becomes the canonical published CID used by
-`dnslink.sh` and the public legs of `check.sh`; the local pin stays for
-recovery.
-
-- **MANUAL (account)** Create a free Pinata account, generate an API key with
-  the `pinFileToIPFS` permission, and copy the JWT.
-- Store it locally, never in git: put `PINATA_JWT='...'` in
-  `scripts/out/remote.env` (git-ignored, mode 600).
-- `./scripts/pin-remote.sh` uploads and records the remote CID at
-  `scripts/out/remote-cid.txt`.
-- `./scripts/dnslink.sh` and `./scripts/check.sh` prefer the remote CID when
-  present.
+- `POST /accounts/{account_id}/pages/projects/tradesummit-landing/domains` for
+  each of `tradesummit.online` and `www.tradesummit.online`. Cloudflare
+  validates ownership via HTTP and issues a Google cert automatically; the
+  domain status moves `initializing -> active` in a minute or two.
+- DNS records required (proxied, equivalent to a CNAME to the Pages project):
+  only the zone's authoritative resolver matters, so a plain proxied CNAME from
+  the hostname to `tradesummit-landing.pages.dev` (proxied + flattening, which
+  Cloudflare supports on the apex) is what `check.sh` verifies. It replaces
+  whatever parked/gateway records were on the hostname before:
+  - `A tradesummit.online -> 2.57.91.91` (Hostinger parked) is replaced by the
+    proxied CNAME/flattened apex record.
+  - `CNAME www -> gateway.ipfs.io` (the old Web3-gateway pointer) is replaced by
+    the Pages CNAME.
+  - `TXT _dnslink.www...` and any leftover `_dnslink.tradesummit.online` are
+    obsolete once Pages serves the content; the `dnslink.sh` record is kept only
+    as the IPFS artifact pointer for pinning, not for serving.
+- If a dashboard "Redirect Rule" or Page Rule still sends the apex to `www`,
+  either keep it (apex -> www is fine) or delete it from
+  "Rules > Redirect Rules" so both hostnames resolve to Pages directly.
 
 ## 4. Verify resolution
 
-- Pre-publish smoke, fully automated:
-  - `./scripts/check.sh` fetches `/ipfs/<CID>/index.html` from the local node
-    gateway and the public gateway in `scripts/config.json`, asserting HTTP 200
-    plus the HTML doctype.
-- **MANUAL (account)** After the record propagates, open
-  `https://www.tradesummit.online` in a normal browser and confirm the page
-  loads. That is the real end-to-end proof.
-- Raw-content check independent of the gateway:
-  - `curl https://www.tradesummit.online/index.html` must return the
-    TradeSummit page, matching the same bytes as `scripts/out/dist/index.html`
-    (`cmp` returns 0).
+- `./scripts/check.sh` now treats the Cloudflare leg as a Pages origin: it
+  fetches `https://www.tradesummit.online/index.html` (root path, not
+  `/ipfs/<CID>/`, which Pages does not serve) and asserts HTTP 200, the HTML
+  doctype, and the TradeSummit marker. The local + public IPFS legs still hit
+  `/ipfs/<CID>/index.html` on the pinned content.
+- Live end-to-end (after cert issuance):
+  - `curl -sSL https://www.tradesummit.online/` and
+    `curl -sSL https://tradesummit.online/` must both return the doctype-marker
+    page, byte-identical to `scripts/out/dist/index.html` (`cmp` returns 0).
+- The public IPFS gateway leg proves the CID is retrievable by anyone; the
+  Pages leg proves the domain serves it.
 
 ## 5. Ship an update later
 
 1. Commit the content change (the build drift guard refuses to publish an
    uncommitted tree).
-2. `./scripts/build.sh` prints the new CID (it refuses to drift the CID unless
-   the change is committed and the DNSLink updates).
-3. `./scripts/publish.sh` pins the new CID.
-4. `CF_API_TOKEN=... ./scripts/dnslink.sh` updates the TXT record to the new
-   CID. The gateway serves the new content without further steps.
+2. `./scripts/build.sh` stages `dist/` and prints the CID (unchanged CID when
+   content is unchanged).
+3. `./scripts/publish.sh` pins the new CID locally; `./scripts/pin-remote.sh`
+   uploads it to the pinning provider (remote CID recorded for checks).
+4. `CF_API_TOKEN=... ./scripts/dnslink.sh` repoints the IPFS DNSLink TXT to the
+   new CID (kept as the canonical IPFS pointer for pinning recovery).
+5. `npx wrangler pages deploy scripts/out/dist --project-name tradesummit-landing
+   --branch main` publishes the new bytes to the domain.
+6. `./scripts/check.sh` verifies all three legs.
 
 ## 6. Manual / account steps at a glance
 
 | Step | Tooling | Manual? |
 | ---- | ------- | ------- |
 | Move DNS to Cloudflare | Cloudflare + Hostinger | MANUAL (account) |
-| Register the DNSLink TXT record | Cloudflare dashboard or `./scripts/dnslink.sh` | one time |
-| Create the IPFS gateway | Cloudflare Web3 dashboard | MANUAL (account) |
-| Apex redirect | Cloudflare Rules | MANUAL (account) |
-| Validate CID on local + public network | `./scripts/check.sh` | automated |
+| Create the Pages project | REST API / dashboard | one time |
+| Attach custom domains | REST API / dashboard | one time |
+| DNS records on the zone | REST API / dashboard | one time |
+| Deploy staged package | `npx wrangler pages deploy` | automated |
+| Pin + DNSLink the CID | `./scripts/{publish,pin-remote,dnslink}.sh` | automated |
+| Validate all legs | `./scripts/check.sh` | automated |
 | Browse `.online` end-to-end | any browser | MANUAL (account) |
-| Repoint record after rebuild | `./scripts/dnslink.sh` | automated |
+| Republish after rebuild | `npx wrangler pages deploy` | automated |
 
-Note: remote pinning services (Pinata, Filebase) are optional extras; the local
-kubo node and Cloudflare's gateway are enough for the record to work.
+Note: Page Rules / Redirect Rules on the zone are the only remaining manual
+DNS-adjacent step; nothing else needs the dashboard once the initial records
+exist.

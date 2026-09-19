@@ -35,12 +35,14 @@ from an Unstoppable Domain without a backend.
 ## Commands
 
 - Dev server: `python3 -m http.server 8000` (open http://localhost:8000)
-- Build: `./scripts/build.sh` (stages the six site paths from git HEAD, preflight-checks, computes IPFS CID, writes to `scripts/out/dist/`)
+- Build: `./scripts/build.sh` (stages the seven site paths from git HEAD, preflight-checks, computes IPFS CID, writes to `scripts/out/dist/`)
 - Publish: `./scripts/publish.sh` (pins the CID into the local kubo repo and lists pins)
+- Pin remote: `./scripts/pin-remote.sh` (uploads the staged package to the pinning provider, records the remote CID)
 - DNSLink: `CF_API_TOKEN=... ./scripts/dnslink.sh` (upserts the `_dnslink.tradesummit.online` TXT record to the new CID; requires `cloudflare.zoneId` in `scripts/config.json`)
-- Check: `./scripts/check.sh` (requires `build` + `publish`; fetches the pinned CID from the local node gateway and the public gateway in `scripts/config.json`, asserting HTTP 200 + doctype)
-- Runbook: `scripts/runbook-Cloudflare.md` (Cloudflare zone, IPFS gateway, DNSLink record, resolution check; paid/account steps marked manual). Legacy UD path: `scripts/runbook-UD.md`
-- Production server: Cloudflare IPFS gateway on `tradesummit.online` (DNSLink-driven); the legacy alias was Unstoppable Domains `tradesummit.crypto`
+- Pages deploy: `CLOUDFLARE_API_TOKEN=$(grep CF_PAGES_TOKEN scripts/out/cf.env | cut -d= -f2) CLOUDFLARE_ACCOUNT_ID=... npx wrangler pages deploy scripts/out/dist --project-name tradesummit-landing --branch main` (publishes the dist to `tradesummit-landing.pages.dev`, wired to `tradesummit.online` and `www`)
+- Check: `./scripts/check.sh` (requires `build` + `publish`; asserts HTTP 200 + doctype: local + public IPFS gateways on `/ipfs/<CID>/index.html`, Cloudflare leg on the Pages root `https://www.tradesummit.online/index.html`)
+- Runbook: `scripts/runbook-Cloudflare.md` (Cloudflare zone, Pages project, custom domains, pinning + DNSLink; paid/account steps marked manual). Legacy UD path: `scripts/runbook-UD.md`
+- Production server: Cloudflare Pages on `tradesummit.online` + `www` (free tier; the IPFS CID stays the canonical artifact, pinned to Pinata and DNSLink-recorded but no longer the serving mechanism); the legacy alias was Unstoppable Domains `tradesummit.crypto`
 - Lint: none configured
 - Format: none configured
 - Tests: no unit test runner configured; the test gate is off
