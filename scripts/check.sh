@@ -119,4 +119,38 @@ if [ -f "$REMOTE_CID_FILE" ] && [ -s "$REMOTE_CID_FILE" ]; then
     echo "note: $PIN_PROVIDER shared gateway returned HTTP $CODE for HTML (free-tier HTML serving disabled); CID is pinned and reachable via the public and cloudflare legs"
   fi
 fi
+# DNS leg: the "Launch App" redirect only matters if the target resolves and
+# serves. The record lives in the Cloudflare zone (outside the committed tree),
+# so a missing record must NOT fail the deploy gate — it prints the exact one
+# liner to create it and stays green. Once the record resolves, the leg is
+# strict: it must serve the app root over HTTPS or this check fails.
+dns_leg() {
+  local name="app.tradesummit.online"
+  local ip=""
+  # Resolver 1: local getent. Resolver 2: Cloudflare DoH JSON (free, keyless)
+  # so the repo check works even on hosts whose resolver doesn't have the record.
+  ip="$(getent ahosts "$name" | awk 'NR==1 { print $1 }' 2>/dev/null || true)"
+  if [ -z "$ip" ]; then
+    ip="$(curl -fsSL --max-time 8 -H 'accept: application/dns-json' \
+      "https://cloudflare-dns.com/dns-query?name=$name&type=A" 2>/dev/null \
+      | jq -r '.Answer[]? | select(.type == 1) | .data' 2>/dev/null | head -1 || true)"
+  fi
+  if [ -z "$ip" ]; then
+    echo "dns: no record yet for $name; in Cloudflare create CNAME \"$name\" -> \"tradesummit.online\" (Proxied, TTL Auto), then re-run this check to prove the redirect target is reachable"
+    return 0
+  fi
+  echo "ok: $name resolves -> $ip"
+  local code
+  code="$(curl -sfL --max-time 20 -o /dev/null -w '%{http_code}' "https://$name/" 2>/dev/null || true)"
+  if [ "$code" = "200" ]; then
+    echo "ok: https://$name/ served the app (HTTP 200)"
+  else
+    echo "check failed: $name resolves but https://$name/ returned HTTP $code" >&2
+    return 1
+  fi
+}
+if ! dns_leg; then
+  exit 1
+fi
+
 echo "ok: gateways verified (local $CID, public $PUBLIC_CID)"
