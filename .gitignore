@@ -20,3 +20,5 @@ CLAUDE.md
 
 # Deploy pipeline build output
 scripts/out/
+### local Worker build cache (never published; the landing ships via git archive HEAD)
+.wrangler/
