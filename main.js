@@ -291,10 +291,32 @@
   // the page is served from a local dev origin. Replace the origins with the
   // hosted /app and /admin origins at deploy time.
   var devHosts = ["127.0.0.1", "localhost"];
+  // App origins. PROD_LAUNCH is the single, shipped deploy target; it is baked
+  // in at runtime so the IPFS artifact keeps no absolute refs in its text.
+  // DEV_LAUNCH serves the local offline harness and is applied automatically
+  // whenever the page is served from a dev origin (see wireLaunchApp).
+  var PROD_LAUNCH = "https://app.tradesummit.online/";
+  var DEV_LAUNCH = "http://localhost:5173/";
+  function onDevServer() {
+    return window.location.port === "8000" || devHosts.indexOf(window.location.hostname) !== -1;
+  }
+  // The nav's green "Launch App" control redirects the visitor into the
+  // product via an explicit navigation (window.location) rather than relying
+  // on the static "#cta" anchor, matching prod-origin / dev-origin selection.
+  function wireLaunchApp() {
+    var launch = document.querySelector(".nav__launch");
+    if (!launch) return;
+    launch.href =
+      "app.tradesummit.online" === window.location.hostname ? PROD_LAUNCH : (onDevServer() ? DEV_LAUNCH : PROD_LAUNCH);
+    launch.rel = "noopener";
+    launch.addEventListener("click", function (event) {
+      event.preventDefault();
+      window.location.assign(launch.href);
+    });
+  }
+  wireLaunchApp();
   function wireDevProductLinks() {
-    var onDevServer =
-      window.location.port === "8000" || devHosts.indexOf(window.location.hostname) !== -1;
-    if (!onDevServer) return;
+    if (!onDevServer()) return;
     var explore = document.querySelector(".btn--ghost");
     if (explore && explore.textContent.indexOf("Explore the platform") !== -1) {
       explore.href = "http://127.0.0.1:5173/";
