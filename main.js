@@ -164,7 +164,7 @@
     if (status) {
       status.classList.toggle("ticker__status--stale", !live);
       var label = status.querySelector("span:last-child");
-      if (label) label.textContent = live ? "Live" : "Snapshot";
+      if (label) label.textContent = live ? "Live" : "Market Data Offline";
     }
     renderTerm(prices, live);
   }
@@ -236,47 +236,41 @@
     return Object.keys(prices).length ? prices : null;
   }
 
-  function fetchGecko() {
-    var ids = tickerAssets.map(function (a) { return a.id; }).join(",");
-    return fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=" + encodeURIComponent(ids) +
-      "&vs_currencies=usd&include_24hr_change=true"
-    )
-      .then(function (r) { if (!r.ok) throw new Error("gecko " + r.status); return r.json(); })
-      .then(applyGecko);
+  function fetchHyperliquidMids() {
+    return fetch("https://api.hyperliquid.xyz/info", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "allMids" })
+    })
+      .then(function (r) { if (!r.ok) throw new Error("hl " + r.status); return r.json(); })
+      .then(function (j) { return applyHyperliquidMids(j); });
   }
 
-  function applyCap(data) {
+  function applyHyperliquidMids(data) {
     var map = {};
-    data.forEach(function (a) {
-      map[a.symbol.toUpperCase()] = {
-        price: parseFloat(a.priceUsd),
-        change: parseFloat(a.changePercent24Hr)
-      };
-    });
+    if (data && typeof data === "object") {
+      Object.keys(data).forEach(function (k) {
+        var v = data[k];
+        var price = parseFloat(v);
+        if (!isNaN(price) && isFinite(price)) {
+          map[k.toUpperCase()] = { price: price, change: 0 };
+        }
+      });
+    }
     return map;
-  }
-
-  function fetchCap() {
-    var ids = tickerAssets.map(function (a) {
-      if (a.id === "binancecoin") return "binance-coin";
-      if (a.id === "avalanche-2") return "avalanche";
-      return a.id;
-    }).join(",");
-    return fetch("https://api.coincap.io/v2/assets?ids=" + encodeURIComponent(ids))
-      .then(function (r) { if (!r.ok) throw new Error("coincap " + r.status); return r.json(); })
-      .then(function (j) { return applyCap(j.data || []); });
   }
 
   function updateTicker() {
     var prices = null;
     var live = false;
-    fetchGecko()
-      .catch(function () { return fetchCap(); })
+    fetchHyperliquidMids()
       .then(function (p) {
         if (p && typeof p === "object") { prices = p; live = true; }
       })
-      .catch(function () { prices = null; live = false; })
+      .catch(function () {
+        prices = null;
+        live = false;
+      })
       .finally(function () { render(prices, live); });
   }
 
