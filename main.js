@@ -300,13 +300,15 @@
   function wireLaunchApp() {
     var launch = document.querySelector(".nav__launch");
     if (!launch) return;
-    launch.href =
-      "app.tradesummit.online" === window.location.hostname ? PROD_LAUNCH : (onDevServer() ? DEV_LAUNCH : PROD_LAUNCH);
+    // Ensure the link opens in a new tab with security attributes
     launch.rel = "noopener";
-    launch.addEventListener("click", function (event) {
-      event.preventDefault();
-      window.location.assign(launch.href);
-    });
+    launch.target = "_blank";
+    // Ensure href is set to production app
+    if (!launch.href || launch.href === "javascript:void(0)") {
+      launch.href = "https://app.tradesummit.online/";
+    }
+    // No need to prevent default - let the link work naturally
+    // The rel="noopener" and target="_blank" handle security
   }
   wireLaunchApp();
   function wireDevProductLinks() {

@@ -21,7 +21,7 @@
         <a href="#security">Security</a>
         <a href="#cta" class="nav__link-cta">Get early access</a>
       </nav>
-      <a href="javascript:void(0)" class="btn btn--primary nav__launch">Launch App</a>
+      <a href="https://app.tradesummit.online/" class="btn btn--primary nav__launch" rel="noopener" target="_blank">Launch App</a>
       <button class="nav__toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
@@ -99,7 +99,7 @@
       </ul>
     </section>
 
-    <section class="features" id="features">
+<section class="features" id="features">
       <div class="section-head">
         <p class="section-head__kicker">Everything the platform is</p>
         <h2>Designed for settlement, engineered for speed.</h2>
@@ -133,7 +133,35 @@
           <p>Built on the BEAM's fault-tolerant runtime with supervised services, so redeploys and failures don't cost you a trade.</p>
         </article>
       </div>
-    </section>
+    
+      <section class="pricing" id="pricing" aria-labelledby="pricing-title">
+        <h2 id="pricing-title" class="section-head__title">Transparent pricing, no hidden fees</h2>
+        <div class="pricing__grid">
+          <article class="pricing__card pricing__card--manual">
+            <h3>Manual Terminal</h3>
+            <p class="pricing__rate"><span class="pricing__num">5.5 bps</span> Total Taker Fee</p>
+            <ul class="pricing__breakdown">
+              <li><span class="pricing__label">Hyperliquid base</span><span class="pricing__value">4.5 bps</span></li>
+              <li><span class="pricing__label">Platform surcharge</span><span class="pricing__value pricing__highlight">1.0 bps</span></li>
+            </ul>
+            <ul class="pricing__features">
+              <li>Zero deposit fees</li>
+              <li>Zero monthly subscriptions</li>
+              <li>Zero VIP volume tiers</li>
+            </ul>
+          </article>
+          <article class="pricing__card pricing__card--vault">
+            <h3>Vault & Copy-Trading</h3>
+            <p class="pricing__rate"><span class="pricing__num">0.05%</span> Ingress Surcharge</p>
+            <ul class="pricing__breakdown">
+              <li><span class="pricing__label">One-time entry fee</span><span class="pricing__value">5 bps</span></li>
+              <li><span class="pricing__label">Performance fee</span><span class="pricing__value pricing__highlight">18%</span> on net profit <span class="pricing__note">(HWM protected)</span></li>
+              <li><span class="pricing__label">Management fee</span><span class="pricing__value">0%</span> AUM</li>
+            </ul>
+            <p class="pricing__note"><em>We only earn when your vault makes net profit above your historical peak.</em></p>
+          </article>
+        </div>
+      </section>
 
     <section class="how" id="how-it-works">
       <div class="section-head">
