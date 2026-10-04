@@ -297,18 +297,20 @@
   // The nav's green "Launch App" control redirects the visitor into the
   // product via an explicit navigation (window.location) rather than relying
   // on the static "#cta" anchor, matching prod-origin / dev-origin selection.
+  // The nav's green "Launch App" control redirects the visitor into the
+  // product via an explicit navigation (window.location) rather than relying
+  // on the static "#cta" anchor, matching prod-origin / dev-origin selection.
   function wireLaunchApp() {
     var launch = document.querySelector(".nav__launch");
     if (!launch) return;
     // Ensure the link opens in a new tab with security attributes
     launch.rel = "noopener";
     launch.target = "_blank";
-    // Ensure href is set to production app
-    if (!launch.href || launch.href === "javascript:void(0)") {
-      launch.href = "https://app.tradesummit.online/";
-    }
-    // No need to prevent default - let the link work naturally
-    // The rel="noopener" and target="_blank" handle security
+    // Handle click to navigate to production app
+    launch.addEventListener("click", function (event) {
+      event.preventDefault();
+      window.location.assign("https://app.tradesummit.online/");
+    });
   }
   wireLaunchApp();
   function wireDevProductLinks() {
