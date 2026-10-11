@@ -919,10 +919,6 @@ section[id] {
   box-shadow: 0 12px 40px -12px rgba(18, 169, 124, 0.25);
 }
 
-.pricing__card--vault::before {
-  background: linear-gradient(90deg, transparent, var(--jade-400), transparent);
-}
-
 .pricing__card h3 {
   font-size: 18px;
   margin-bottom: 8px;
