@@ -16,51 +16,6 @@
     year.textContent = new Date().getFullYear();
   }
 
-  var form = document.getElementById("waitlist-form");
-  var note = document.getElementById("cta-note");
-  var WAITLIST_ENDPOINT = "/api/waitlist";
-  if (form) {
-    form.addEventListener("submit", function (event) {
-      event.preventDefault();
-      var button = form.querySelector("button[type=submit]");
-      var email = document.getElementById("email").value.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        note.textContent = "Please enter a valid email address.";
-        note.className = "cta__note cta__note--err";
-        return;
-      }
-      var payload = { email: email, source: "landing" };
-      if (document.referrer) {
-        payload.referrer = document.referrer;
-      }
-      if (button) {
-        button.disabled = true;
-      }
-      fetch(WAITLIST_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      })
-        .then(function (response) {
-          if (!response.ok) {
-            throw new Error("HTTP " + response.status);
-          }
-          note.textContent = "You're on the list. We'll reach out before the first trading window opens.";
-          note.className = "cta__note cta__note--ok";
-          form.reset();
-        })
-        .catch(function () {
-          note.textContent = "Sorry, we couldn't save that just now. Please try again in a moment.";
-          note.className = "cta__note cta__note--err";
-        })
-        .finally(function () {
-          if (button) {
-            button.disabled = false;
-          }
-        });
-    });
-  }
-
   var targets = document.querySelectorAll(".features .feature, .how .step, .security__list li");
   if ("IntersectionObserver" in window && window.matchMedia("(prefers-reduced-motion: reduce)").matches === false) {
     var observer = new IntersectionObserver(
@@ -287,30 +242,24 @@
   var devHosts = ["127.0.0.1", "localhost"];
   // App origins. PROD_LAUNCH is the single, shipped deploy target; it is baked
   // in at runtime so the IPFS artifact keeps no absolute refs in its text.
-  // DEV_LAUNCH serves the local offline harness and is applied automatically
-  // whenever the page is served from a dev origin (see wireLaunchApp).
   var PROD_LAUNCH = "https://app.tradesummit.online/";
-  var DEV_LAUNCH = "http://localhost:5173/";
   function onDevServer() {
     return window.location.port === "8000" || devHosts.indexOf(window.location.hostname) !== -1;
   }
-  // The nav's green "Launch App" control redirects the visitor into the
-  // product via an explicit navigation (window.location) rather than relying
-  // on the static "#cta" anchor, matching prod-origin / dev-origin selection.
-  // The nav's green "Launch App" control redirects the visitor into the
-  // product via an explicit navigation (window.location) rather than relying
-  // on the static "#cta" anchor, matching prod-origin / dev-origin selection.
+  // The green "Launch App" controls (nav and closing CTA) redirect the visitor
+  // into the product via an explicit navigation rather than a static anchor,
+  // so the shipped artifact keeps no absolute refs in its text for IPFS.
   function wireLaunchApp() {
-    var launch = document.querySelector(".nav__launch");
-    if (!launch) return;
-    // Ensure the link opens in a new tab with security attributes
-    launch.rel = "noopener";
-    launch.target = "_blank";
-    // Handle click to navigate to production app
-    launch.addEventListener("click", function (event) {
-      event.preventDefault();
-      window.location.assign("https://app.tradesummit.online/");
-    });
+    var launches = document.querySelectorAll(".nav__launch, [data-launch-app]");
+    for (var i = 0; i < launches.length; i++) {
+      var launch = launches[i];
+      launch.rel = "noopener";
+      launch.target = "_blank";
+      launch.addEventListener("click", function (event) {
+        event.preventDefault();
+        window.location.assign(PROD_LAUNCH);
+      });
+    }
   }
   wireLaunchApp();
   function wireDevProductLinks() {
