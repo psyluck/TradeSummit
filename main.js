@@ -170,7 +170,7 @@
         "BTC " + formatPrice(btc.price) +
         ' <span class="' + (up ? "up" : "down") + '">' +
         (up ? "\u25B2 +" : "\u25BC -") + Math.abs(btc.change || 0).toFixed(2) +
-        "%</span>\u00A0\u00A0LAST " + new Date().toISOString().slice(0, 19).replace("T", " ") +
+        "%</span>\u00A0\u00A0UPDATED " + new Date().toISOString().slice(0, 19).replace("T", " ") +
         ' UTC <span class="cursor" aria-hidden="true">_</span>';
     }
   }
