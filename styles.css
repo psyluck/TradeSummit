@@ -868,6 +868,16 @@ section[id] {
   box-shadow: 0 0 12px rgba(18, 169, 124, 0.45);
 }
 
+.security__list li.security__highlight {
+  color: var(--jade-300);
+  font-weight: 600;
+}
+
+.security__list li.security__highlight strong {
+  color: var(--jade-100);
+  font-weight: 800;
+}
+
 /* ---------- Pricing ---------- */
 
 .pricing {
