@@ -6,7 +6,7 @@ settled exclusively in USDC.
 - Execution on Hyperliquid's order book; trades and settlement are one atomic,
   verifiable operation with no custody in the middle
 - Settlement exclusively in USDC, unified across chains
-- A hard 10x leverage cap keeps the platform structurally conservative
+- A hard 30x leverage cap keeps the platform structurally conservative
 - Landing site served from IPFS via Cloudflare's IPFS gateway on
   `tradesummit.online`
 
@@ -46,7 +46,7 @@ marked manual. The archived Unstoppable Domains runbook
 
 Phase 2 plans the platform core, all native Hyperliquid + USDC: a CCTP-based
 USDC settlement rail, an actor-model Erlang WebSocket gateway, a type-safe
-Haskell portfolio-margin risk core with the hard 10x cap, a low-latency Rust
+Haskell portfolio-margin risk core with the hard 30x cap, a low-latency Rust
 execution and bridge layer, and signed order flow against Hyperliquid testnet
 with verified fills.
 
