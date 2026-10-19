@@ -104,6 +104,24 @@ same CID Pinata serves:
 - The public IPFS gateway leg proves the CID is retrievable by anyone; the
   Pages leg proves the domain serves it.
 
+## 4b. Keep-alive Worker - one time create, then redeploy on change
+
+The gateway runs on a Render free-tier instance, which sleeps on inbound
+inactivity. A separate Cloudflare Worker on a cron trigger pings the gateway
+`/health` from outside so the instance stays warm. It is a distinct artifact
+from the Pages site (its own deploy and its own cron) and lives in
+[`worker/`](../worker). The full details are in
+[`worker/README.md`](../worker/README.md); the short version:
+
+- **MANUAL (account)** Create/deploy with `cd worker && npx wrangler deploy`
+  (needs a Workers-capable token). The cron (`*/5 * * * *`) is declared in
+  `worker/wrangler.toml`, so the deploy registers it; no dashboard step.
+- The gateway host it pings is `keepalive.healthUrl` in `scripts/config.json`,
+  mirrored into `worker/wrangler.toml` because wrangler cannot read that file.
+  `./scripts/check.sh` fails if the two copies drift.
+- Verify offline: `node worker/test/index.test.js`. Verify live:
+  `curl https://tradesummit-keepalive.<subdomain>.workers.dev/`.
+
 ## 5. Ship an update later
 
 1. Commit the content change (the build drift guard refuses to publish an
@@ -129,7 +147,7 @@ same CID Pinata serves:
 | Deploy staged package | `npx wrangler pages deploy` | automated |
 | Pin + DNSLink the CID | `./scripts/{publish,pin-remote,dnslink}.sh` | automated |
 | Validate all legs | `./scripts/check.sh` | automated |
-| Browse `.online` end-to-end | any browser | MANUAL (account) |
+| Create/deploy keep-alive Worker | `cd worker && npx wrangler deploy` | one time |
 | Republish after rebuild | `npx wrangler pages deploy` | automated |
 
 Note: Page Rules / Redirect Rules on the zone are the only remaining manual

@@ -4,6 +4,28 @@ set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/_config.sh"
 
 OUT="$(dirname "$CID_FILE")"
+
+# Keep-alive Worker drift gate. The Worker pings keepalive.healthUrl from
+# scripts/config.json, but it deploys from worker/wrangler.toml, which carries
+# its own copy of the URL because wrangler cannot read this file. Two copies of
+# one value is a drift waiting to happen, so assert they agree before anything
+# else. This is offline and always runs, even when the CID file is missing.
+WORKER_TOML="$ROOT/worker/wrangler.toml"
+if [ -f "$WORKER_TOML" ]; then
+  KA_URL="$(jq -r '.keepalive.healthUrl // empty' "$CONFIG")"
+  TOML_URL="$(grep -E '^GATEWAY_HEALTH_URL[[:space:]]*=' "$WORKER_TOML" | head -1 | sed -E 's/.*=[[:space:]]*"([^"]*)".*/\1/')"
+  if [ -z "$KA_URL" ]; then
+    echo "check failed: keepalive.healthUrl is missing from $CONFIG" >&2
+    exit 1
+  fi
+  if [ "$KA_URL" != "$TOML_URL" ]; then
+    echo "check failed: keep-alive Worker target drifted from config" >&2
+    echo "  scripts/config.json keepalive.healthUrl: $KA_URL" >&2
+    echo "  worker/wrangler.toml GATEWAY_HEALTH_URL:  $TOML_URL" >&2
+    exit 1
+  fi
+  echo "ok: keep-alive Worker target matches config ($KA_URL)"
+fi
 [ -f "$CID_FILE" ] || { echo "check: no $CID_FILE; run ./scripts/build.sh first" >&2; exit 1; }
 CID="$(cat "$CID_FILE")"
 # Local CID is what kubo pinned; the public/routing legs use the remote CID

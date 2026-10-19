@@ -12,6 +12,11 @@
     "dnslinkHost": "tradesummit.online",
     "gatewayHost": "www.tradesummit.online"
   },
+  "keepalive": {
+    "workerName": "tradesummit-keepalive",
+    "healthUrl": "https://tradesummit-gateway-3jw6.onrender.com/health",
+    "cron": "*/5 * * * *"
+  },
   "pinning": {
     "provider": "pinata",
     "apiBase": "https://uploads.pinata.cloud",

@@ -1,0 +1,28 @@
+# TradeSummit keep-alive Worker.
+#
+# An external cron that hits the Render gateway's /health so the free-tier
+# instance sees real inbound traffic and does not spin down. The Erlang
+# gw_keepalive self-ping covers the in-instance case; this covers the platform's
+# sleep signal, which is external reachability.
+#
+# Deploy: `npx wrangler deploy` from this directory (needs a Workers-capable
+# Cloudflare token). The gateway host is not committed as a secret because it is
+# already public (the app connects to it); set it in wrangler.toml [vars] or
+# override in the dashboard.
+
+name = "tradesummit-keepalive"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+# Every 5 minutes. Render's free-tier sleep threshold is 15 minutes of
+# inactivity, so a 5-minute cadence keeps the instance comfortably awake with
+# room for a missed tick, and stays well inside the free Workers request budget
+# (scheduled invocations are cheap and this is one fetch each).
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+# The gateway health endpoint. Public host, no secret: the terminal already
+# connects to this origin, and /health discloses nothing but its own liveness.
+GATEWAY_HEALTH_URL = "https://tradesummit-gateway-3jw6.onrender.com/health"
+PROBE_TIMEOUT_MS = "10000"
