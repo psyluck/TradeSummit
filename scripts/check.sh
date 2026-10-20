@@ -28,6 +28,29 @@ if [ -f "$WORKER_TOML" ]; then
 fi
 [ -f "$CID_FILE" ] || { echo "check: no $CID_FILE; run ./scripts/build.sh first" >&2; exit 1; }
 CID="$(cat "$CID_FILE")"
+# Price drift gate. The published taker price is the Hyperliquid base taker fee
+# plus BUILDER_FEE_BPS in the terminal; if either moves, the marketing number
+# here is stale. The pricing card and the social metadata must both read the
+# same all-in figure the code charges.
+APP_SIGNING="$ROOT/../app/frontend/app/src/signing.ts"
+if [ -f "$APP_SIGNING" ]; then
+  BUILDER_WIRE="$(grep -E '^export const BUILDER_FEE_BPS' "$APP_SIGNING" | head -1 | sed -E 's/.*=[[:space:]]*([0-9]+).*/\1/')"
+  if [ -z "$BUILDER_WIRE" ]; then
+    echo "check failed: could not read BUILDER_FEE_BPS from $APP_SIGNING" >&2
+    exit 1
+  fi
+  # tenths-of-bps wire value to bps; base tier taker is 4.5 bps.
+  TOTAL_BPS="$(awk -v f="$BUILDER_WIRE" 'BEGIN { printf "%.1f", 4.5 + f/10 }')"
+  if grep -q "5\.5 bps" "$ROOT/index.html" || grep -q "1\.0 bps" "$ROOT/index.html"; then
+    echo "check failed: landing/index.html still advertises the stale 5.5 bps / 1.0 bps price" >&2
+    exit 1
+  fi
+  if ! grep -q "$TOTAL_BPS bps" "$ROOT/index.html"; then
+    echo "check failed: landing/index.html does not show the all-in $TOTAL_BPS bps taker fee" >&2
+    exit 1
+  fi
+  echo "ok: landing pricing matches the terminal builder fee ($TOTAL_BPS bps all-in)"
+fi
 # Local CID is what kubo pinned; the public/routing legs use the remote CID
 # from pin-remote.sh when one exists (the only CID guaranteed publicly
 # retrievable), otherwise they fall back to the local CID.
