@@ -20,9 +20,17 @@
   <meta name="twitter:image" content="https://www.tradesummit.online/assets/logos/tradesummit.png" />
   <link rel="icon" type="image/png" href="assets/logos/tradesummit.png" />
   <link rel="stylesheet" href="styles.css" />
-  <!-- Cloudflare Web Analytics -->
-  <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "4b3529841f364c7cb633a222a8f113fc"}'></script>
-  <!-- End Cloudflare Web Analytics -->
+  <!-- Cloudflare Web Analytics: loaded at runtime so the static package keeps
+       no absolute asset references (the beacon URL is external by design). -->
+  <script>
+    window.addEventListener("load", function () {
+      var beacon = document.createElement("script");
+      beacon.defer = true;
+      beacon.setAttribute("src", "https://static.cloudflareinsights.com/beacon.min.js");
+      beacon.setAttribute("data-cf-beacon", '{"token": "4b3529841f364c7cb633a222a8f113fc"}');
+      document.head.appendChild(beacon);
+    });
+  </script>
 </head>
 <body>
   <header class="nav">
