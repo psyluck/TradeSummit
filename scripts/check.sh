@@ -41,8 +41,8 @@ if [ -f "$APP_SIGNING" ]; then
   fi
   # tenths-of-bps wire value to bps; base tier taker is 4.5 bps.
   TOTAL_BPS="$(awk -v f="$BUILDER_WIRE" 'BEGIN { printf "%.1f", 4.5 + f/10 }')"
-  if grep -q "5\.5 bps" "$ROOT/index.html" || grep -q "1\.0 bps" "$ROOT/index.html"; then
-    echo "check failed: landing/index.html still advertises the stale 5.5 bps / 1.0 bps price" >&2
+  if grep -q "4\.8 bps" "$ROOT/index.html" || grep -q "0\.3 bps" "$ROOT/index.html"; then
+    echo "check failed: landing/index.html still advertises the stale 4.8 bps / 0.3 bps price" >&2
     exit 1
   fi
   if ! grep -q "$TOTAL_BPS bps" "$ROOT/index.html"; then
