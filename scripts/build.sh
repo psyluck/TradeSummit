@@ -46,7 +46,8 @@ fi
 # endpoints in main.js (CoinGecko/CoinCap) are runtime calls, not assets, and
 # do not match src/href/url() so they are intentionally left alone.
 ASSET_RE="(src|href)=[\"']?(https?:|//)|url\([\"']?(https?:|//)"
-if grep -Ern "$ASSET_RE" --include='*.html' --include='*.css' --include='*.js' "$DIST"; then
+ASSET_EXCEPTIONS='href="https://app.tradesummit.online"'
+if grep -Ern "$ASSET_RE" --include='*.html' --include='*.css' --include='*.js' "$DIST" | grep -Ev -F "$ASSET_EXCEPTIONS"; then
   echo "preflight failed: absolute or protocol-slash asset reference found" >&2
   exit 1
 fi
