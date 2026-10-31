@@ -47,7 +47,7 @@ https://www.tradesummit.online/#pricing
 Built on @HyperliquidX.
 
 Orders match on Hyperliquid's on-chain L1 order book, settle atomically in
-USDC, and carry a hard 30x leverage cap enforced by a type-safe risk core.
+USDC, and carry a Up to 40x leverage cap enforced by a type-safe risk core.
 ```
 
 ### 5
@@ -73,7 +73,7 @@ A non-custodial trading floor for digital assets, built on Hyperliquid.
 - USDC settlement, with trade and settlement as one atomic operation
 - 5.5 bps all-in taker fee at the base tier: 4.5 bps Hyperliquid base plus a
   1.0 bps builder fee
-- Hard 30x leverage cap, enforced by a verifiable risk core
+- Up to 40x leverage cap, enforced by a verifiable risk core
 - A provable audit trail: every state change is hash-linked and independently
   verifiable
 - No store of funds: your keys sign, you remain custodian
@@ -95,7 +95,7 @@ TradeSummit is live.
 Non-custodial trading on Hyperliquid's on-chain order book, settled in USDC.
 
 - 5.5 bps all-in taker fee (4.5 bps Hyperliquid base + 1.0 bps builder fee)
-- Hard 30x leverage cap
+- Up to 40x leverage cap
 - No store of funds: you remain custodian
 - No deposit fees, no subscriptions, no VIP tiers
 
