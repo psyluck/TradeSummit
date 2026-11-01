@@ -132,6 +132,33 @@ check_pages() {
   echo "ok: $name served /index.html (HTTP 200, doctype present, marker present)"
 }
 
+# Copy gate. The marker check above only proves the live root serves *a*
+# TradeSummit page, not the current one: a stale Pages deployment that still
+# carried the old 30x cap passed this script while the 40x build sat unpushed.
+# Assert the headline number explicitly so copy drift fails the deploy gate.
+check_live_copy() {
+  local base="$1" body code
+  body="$(mktemp)"
+  code="$(curl -sL --max-redirs 5 --max-time 45 -w '%{http_code}' -o "$body" "$base/index.html" 2>/dev/null || true)"
+  if [ "$code" != "200" ]; then
+    rm -f "$body"
+    echo "check failed: live copy leg returned HTTP $code at $base/index.html" >&2
+    return 1
+  fi
+  if ! grep -qi '40x' "$body"; then
+    rm -f "$body"
+    echo "check failed: $base/index.html does not mention 40x; the 40x leverage copy is not live" >&2
+    return 1
+  fi
+  if grep -qi '30x' "$body"; then
+    rm -f "$body"
+    echo "check failed: $base/index.html still serves stale 30x leverage copy" >&2
+    return 1
+  fi
+  rm -f "$body"
+  echo "ok: live copy at $base/index.html shows 40x and no stale 30x"
+}
+
 check_gateway "local" "$LOCAL_GATEWAY" "$CID" "TradeSummit"
 
 # Public leg tries fallbacks with backoff: free public gateways rate-limit
@@ -151,6 +178,7 @@ fi
 if [ -n "$CF_GATEWAY_HOST" ]; then
   check_pages "cloudflare" "https://$CF_GATEWAY_HOST" "TradeSummit" \
     || echo "note: cloudflare leg not green; expected a Cloudflare Pages project serving the dist on www.tradesummit.online" >&2
+  check_live_copy "https://$CF_GATEWAY_HOST"
 fi
 
 # Provider gateway probe is informational, not a gate: Pinata's free-tier
