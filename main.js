@@ -235,33 +235,14 @@
   setInterval(updateTicker, 60000);
   setInterval(tickClock, 1000);
 
-  // Dev-only product navigation. The shipped artifact must stay free of
-  // absolute refs for IPFS, so these origins are wired at runtime only when
-  // the page is served from a local dev origin. Replace the origins with the
-  // hosted /app and /admin origins at deploy time.
+  // Dev-only product navigation. The shipped artifact keeps its Launch App
+  // hrefs as real absolute URLs so native browser behavior (middle-click,
+  // open in new tab) works. On a local dev origin the main launch control is
+  // pointed at the local terminal instead.
   var devHosts = ["127.0.0.1", "localhost"];
-  // App origins. PROD_LAUNCH is the single, shipped deploy target; it is baked
-  // in at runtime so the IPFS artifact keeps no absolute refs in its text.
-  var PROD_LAUNCH = "https://app.tradesummit.online/";
   function onDevServer() {
     return window.location.port === "8000" || devHosts.indexOf(window.location.hostname) !== -1;
   }
-  // The green "Launch App" controls (nav and closing CTA) redirect the visitor
-  // into the product via an explicit navigation rather than a static anchor,
-  // so the shipped artifact keeps no absolute refs in its text for IPFS.
-  function wireLaunchApp() {
-    var launches = document.querySelectorAll(".nav__launch, [data-launch-app]");
-    for (var i = 0; i < launches.length; i++) {
-      var launch = launches[i];
-      launch.rel = "noopener";
-      launch.target = "_blank";
-      launch.addEventListener("click", function (event) {
-        event.preventDefault();
-        window.location.assign(PROD_LAUNCH);
-      });
-    }
-  }
-  wireLaunchApp();
   function wireDevProductLinks() {
     if (!onDevServer()) return;
     var explore = document.querySelector(".btn--ghost");

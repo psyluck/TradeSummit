@@ -39,7 +39,7 @@
         <span class="outage-banner__pill">⚡️ Outage &amp; Performance Upgrade</span>
         <p class="outage-banner__text">Experiencing downtime with GoodCryptoX, BasedApp, or HyperDash? Upgrade to TradeSummit — native Hyperliquid execution, ultra-low fees, and institutional Erlang/Rust reliability.</p>
       </div>
-      <a href="https://app.tradesummit.online" class="outage-banner__cta" rel="noopener" target="_blank">Launch App</a>
+      <a href="https://app.tradesummit.online/" class="outage-banner__cta" rel="noopener" target="_blank">Launch App</a>
     </div>
   </div>
   <header class="nav">
@@ -50,11 +50,13 @@
       </a>
       <nav class="nav__links" id="nav-links">
         <a href="#features">Features</a>
+        <a href="#funding">Funding</a>
         <a href="#how-it-works">How it works</a>
+        <a href="#faq">FAQ</a>
         <a href="#security">Security</a>
-        <a href="javascript:void(0)" class="nav__link-cta" data-launch-app rel="noopener" target="_blank">Launch App</a>
+        <a href="https://app.tradesummit.online/" class="nav__link-cta" rel="noopener" target="_blank">Launch App</a>
       </nav>
-      <a href="javascript:void(0)" class="btn btn--primary nav__launch" rel="noopener" target="_blank">Launch App</a>
+      <a href="https://app.tradesummit.online/" class="btn btn--primary nav__launch" rel="noopener" target="_blank">Launch App</a>
       <button class="nav__toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
@@ -83,8 +85,12 @@
             A unified non-custodial trading floor for digital assets, with Hyperliquid
             order execution, USDC liquidity, and a verifiable risk core underneath.
           </p>
+          <p class="hero__funding">
+            First time? You will need USDC on Arbitrum One. Connect a wallet, fund in
+            about a minute, then trade. <a href="#funding">See the funding steps</a>.
+          </p>
           <div class="hero__actions">
-            <a href="javascript:void(0)" class="btn btn--primary" data-launch-app rel="noopener" target="_blank">Launch App</a>
+            <a href="https://app.tradesummit.online/" class="btn btn--primary" rel="noopener" target="_blank">Launch App</a>
             <a href="#features" class="btn btn--ghost">Explore the platform</a>
           </div>
           <ul class="hero__meta">
@@ -213,6 +219,38 @@
       </ol>
     </section>
 
+    <section class="funding" id="funding">
+      <div class="section-head">
+        <p class="section-head__kicker">Funding</p>
+        <h2>Fund your account in three steps.</h2>
+        <p class="section-head__lede">
+          TradeSummit never holds your funds. You deposit USDC directly into your own
+          Hyperliquid account, and only you can withdraw it.
+        </p>
+      </div>
+      <ol class="funding__steps">
+        <li class="funding__step">
+          <span class="step__num">01</span>
+          <h3>Connect your wallet</h3>
+          <p>Open the terminal and click Connect wallet. Your keys stay in your wallet, never on our servers.</p>
+        </li>
+        <li class="funding__step">
+          <span class="step__num">02</span>
+          <h3>Deposit USDC on Arbitrum One</h3>
+          <p>Click Fund, then copy your address. Send USDC on Arbitrum One. Most deposits credit in under a minute.</p>
+        </li>
+        <li class="funding__step">
+          <span class="step__num">03</span>
+          <h3>Start trading</h3>
+          <p>Once USDC lands, approve one-click trading and place your first order. There are no deposit fees.</p>
+        </li>
+      </ol>
+      <div class="funding__foot">
+        <p>Funding goes straight to your Hyperliquid account. No custody, no waiting room.</p>
+        <a href="https://app.tradesummit.online/" class="btn btn--primary" rel="noopener" target="_blank">Fund and trade</a>
+      </div>
+    </section>
+
     <section class="security" id="security">
       <div class="security__inner">
         <div class="section-head section-head--left">
@@ -228,11 +266,47 @@
       </div>
     </section>
 
+    <section class="faq" id="faq">
+      <div class="section-head">
+        <p class="section-head__kicker">FAQ</p>
+        <h2>Questions before you fund.</h2>
+        <p class="section-head__lede">
+          The short answers to what traders ask before their first deposit.
+        </p>
+      </div>
+      <div class="faq__list">
+        <details class="faq__item">
+          <summary>What do I need to start trading?</summary>
+          <p>A wallet and USDC on Arbitrum One. There is no account, KYC, or minimum deposit on the TradeSummit side.</p>
+        </details>
+        <details class="faq__item">
+          <summary>Where does my money go?</summary>
+          <p>Straight to your own Hyperliquid account. TradeSummit never holds your funds and has no withdrawal access.</p>
+        </details>
+        <details class="faq__item">
+          <summary>How long do deposits take?</summary>
+          <p>USDC on Arbitrum One usually credits in under a minute. Deposits from other supported chains can take longer.</p>
+        </details>
+        <details class="faq__item">
+          <summary>What fees do I pay?</summary>
+          <p>Hyperliquid's base taker fee plus a 1.0 bps TradeSummit builder fee, 5.5 bps all-in at the base tier. No deposit, withdrawal, or subscription fees from TradeSummit.</p>
+        </details>
+        <details class="faq__item">
+          <summary>Do I have to approve anything?</summary>
+          <p>One signature lets TradeSummit route orders for your wallet and adds a 0.01% fee on filled orders. You can revoke it in Hyperliquid at any time.</p>
+        </details>
+        <details class="faq__item">
+          <summary>Can I withdraw whenever I want?</summary>
+          <p>Yes. Withdraw directly from your Hyperliquid account. TradeSummit cannot block or hold withdrawals.</p>
+        </details>
+      </div>
+    </section>
+
     <section class="cta" id="cta">
       <div class="cta__inner">
         <h2>Ready to trade directly on Hyperliquid's order book?</h2>
         <p>Open the terminal and execute on an on-chain, deterministic Layer 1.</p>
-        <a href="javascript:void(0)" class="btn btn--primary" data-launch-app rel="noopener" target="_blank">Launch App</a>
+        <a href="https://app.tradesummit.online/" class="btn btn--primary" rel="noopener" target="_blank">Launch App</a>
       </div>
     </section>
   </main>
@@ -243,6 +317,8 @@
       <ul class="footer__links">
         <li><a href="#top">Home</a></li>
         <li><a href="#features">Features</a></li>
+        <li><a href="#funding">Funding</a></li>
+        <li><a href="#faq">FAQ</a></li>
         <li><a href="#security">Security</a></li>
       </ul>
       <p class="footer__legal">&copy; <span id="year"></span> TradeSummit. Not investment advice. Digital asset trading involves risk.</p>
