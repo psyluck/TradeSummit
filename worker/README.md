@@ -50,7 +50,22 @@ deploy registers it; no dashboard step. Render's free-tier sleep threshold is
 15 minutes, so a 5-minute cadence keeps the instance comfortably awake with room
 for a missed tick.
 
-## Verify
+## Metrics and alerting
+
+The Worker can also probe `/metrics` on the same cadence. Set
+`GATEWAY_METRICS_TOKEN` to the gateway's operator token (the same value as
+`GATEWAY_METRICS_TOKEN` on Render). When it is unset, the metrics probe is
+skipped and only `/health` is checked, so the keep-alive still works without
+operator credentials.
+
+Set `ALERT_WEBHOOK_URL` to an HTTPS endpoint (a Slack/Discord incoming webhook,
+a PagerDuty events URL, or any HTTPS receiver) to get a JSON alert when either
+probe fails. The alert carries the health and metrics snapshots from the
+failing invocation. The Worker is stateless, so alerts fire per failing
+invocation rather than on a state transition; tune the receiver accordingly.
+
+`GATEWAY_METRICS_URL` and `ALERT_WEBHOOK_URL` are optional and default to the
+health URL with `/health` replaced by `/metrics` and "no webhook" respectively.
 
 Local, no Cloudflare needed:
 

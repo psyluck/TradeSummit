@@ -8,23 +8,21 @@
 // endpoint on a fixed schedule, so the free instance sees real inbound traffic
 // and stays warm without a paid plan.
 //
-// The target is read from the Worker's environment (GATEWAY_HEALTH_URL) so the
-// host is config, not a literal buried in code. There is no fallback: an unset
-// or malformed target fails the invocation loudly rather than silently pinging
-// nothing, because a keep-alive that quietly no-ops is worse than one that
-// errors.
+// The same invocation also probes /metrics when an operator token is configured,
+// so uptime and error counters are read on the same cadence as liveness. A
+// failed probe, or a metrics read that cannot be authorized, triggers a
+// webhook alert when ALERT_WEBHOOK_URL is set. The Worker stays stateless: it
+// does not persist previous samples, so alerting is edge-triggered on the
+// current invocation rather than on a transition.
 //
-// The scheduled event and the fetch handler share one probe. The scheduled
-// path is the product; the fetch path exists so a manual `curl` of the Worker
-// URL can confirm the probe works and see the last result, which is how this
-// gets verified without waiting for the next cron tick.
+// Targets are read from the Worker's environment so hosts and tokens are
+// config, not literals buried in code. There is no fallback for the health
+// URL: an unset or malformed target fails the invocation loudly rather than
+// silently pinging nothing, because a keep-alive that quietly no-ops is worse
+// than one that errors.
 
 const DEFAULT_TIMEOUT_MS = 10000;
 
-// A health probe is only meaningful if it distinguishes a healthy gateway from
-// a broken one. A 200 with a body that is not the gateway's `{"status":"ok"}`
-// is treated as unhealthy: a parked page, a proxy error page, or any other
-// 200 body must not read as "warm".
 function healthy(status, body) {
   if (status !== 200) return false;
   try {
@@ -34,17 +32,15 @@ function healthy(status, body) {
   }
 }
 
-async function probe(url, timeoutMs) {
+async function probe(url, timeoutMs, headers = {}) {
   const started = Date.now();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(url, {
       method: "GET",
-      headers: { "user-agent": "tradesummit-keepalive" },
+      headers: { "user-agent": "tradesummit-keepalive", ...headers },
       signal: controller.signal,
-      // Never let Cloudflare serve a cached 200 for a probe whose whole point
-      // is to generate origin traffic.
       cf: { cacheTtl: 0, cacheEverything: false },
     });
     const body = await response.text();
@@ -52,6 +48,7 @@ async function probe(url, timeoutMs) {
       ok: healthy(response.status, body),
       status: response.status,
       ms: Date.now() - started,
+      body,
     };
   } catch (err) {
     return {
@@ -63,6 +60,33 @@ async function probe(url, timeoutMs) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+async function probeMetrics(url, token, timeoutMs) {
+  if (!token) {
+    return { configured: false, ok: true, skipped: true, status: 0, ms: 0 };
+  }
+  const result = await probe(url, timeoutMs, {
+    authorization: `Bearer ${token}`,
+    "x-metrics-token": token,
+  });
+  let parsed = null;
+  try {
+    parsed = JSON.parse(result.body ?? "");
+  } catch {
+    parsed = null;
+  }
+  const ok = result.ok && parsed !== null && parsed.status === "ok";
+  return {
+    configured: true,
+    ok,
+    skipped: false,
+    status: result.status,
+    ms: result.ms,
+    uptimeMs: parsed?.node_uptime_ms ?? null,
+    connections: parsed?.connections ?? null,
+    error: ok ? undefined : (result.error ?? (result.status === 0 ? "network error" : `unexpected response (${result.status})`)),
+  };
 }
 
 function readConfig(env) {
@@ -80,23 +104,105 @@ function readConfig(env) {
     throw new Error(`GATEWAY_HEALTH_URL must be https, got ${parsed.protocol}`);
   }
   const timeoutMs = Number(env?.PROBE_TIMEOUT_MS ?? DEFAULT_TIMEOUT_MS);
-  return { url, timeoutMs: Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : DEFAULT_TIMEOUT_MS };
+  const resolvedTimeout = Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : DEFAULT_TIMEOUT_MS;
+
+  const metricsUrl = env?.GATEWAY_METRICS_URL
+    ? String(env.GATEWAY_METRICS_URL)
+    : url.replace(/\/health\/?$/, "/metrics");
+  let metricsParsed;
+  try {
+    metricsParsed = new URL(metricsUrl);
+  } catch {
+    throw new Error(`GATEWAY_METRICS_URL is not a valid URL: ${metricsUrl}`);
+  }
+  if (metricsParsed.protocol !== "https:") {
+    throw new Error(`GATEWAY_METRICS_URL must be https, got ${metricsParsed.protocol}`);
+  }
+
+  const webhookUrl = env?.ALERT_WEBHOOK_URL ? String(env.ALERT_WEBHOOK_URL) : null;
+  if (webhookUrl) {
+    let webhookParsed;
+    try {
+      webhookParsed = new URL(webhookUrl);
+    } catch {
+      throw new Error(`ALERT_WEBHOOK_URL is not a valid URL: ${webhookUrl}`);
+    }
+    if (webhookParsed.protocol !== "https:") {
+      throw new Error(`ALERT_WEBHOOK_URL must be https, got ${webhookParsed.protocol}`);
+    }
+  }
+
+  const metricsToken = env?.GATEWAY_METRICS_TOKEN ? String(env.GATEWAY_METRICS_TOKEN) : null;
+
+  return {
+    url,
+    timeoutMs: resolvedTimeout,
+    metricsUrl,
+    metricsToken,
+    webhookUrl,
+  };
+}
+
+async function runProbes(config) {
+  const health = await probe(config.url, config.timeoutMs);
+  const healthResult = {
+    ok: health.ok,
+    status: health.status,
+    ms: health.ms,
+    error: health.ok ? undefined : (health.error ?? `unexpected response (${health.status})`),
+  };
+  const metrics = await probeMetrics(config.metricsUrl, config.metricsToken, config.timeoutMs);
+  const ok = healthResult.ok && metrics.ok;
+  return { ok, health: healthResult, metrics };
+}
+
+async function sendAlert(config, result) {
+  if (!config.webhookUrl) return;
+  try {
+    await fetch(config.webhookUrl, {
+      method: "POST",
+      headers: { "content-type": "application/json", "user-agent": "tradesummit-keepalive" },
+      body: JSON.stringify({
+        source: "tradesummit-keepalive",
+        ok: result.ok,
+        timestamp: new Date().toISOString(),
+        health: result.health,
+        metrics: result.metrics,
+      }),
+    });
+  } catch (err) {
+    console.error(`alert webhook failed: ${err instanceof Error ? err.message : String(err)}`);
+  }
 }
 
 export default {
   async scheduled(_event, env, ctx) {
-    const { url, timeoutMs } = readConfig(env);
-    ctx.waitUntil(
-      probe(url, timeoutMs).then((result) => {
-        if (result.ok) {
-          console.log(`keepalive ok: ${url} ${result.status} in ${result.ms}ms`);
-        } else {
-          console.error(
-            `keepalive failed: ${url} status=${result.status} in ${result.ms}ms${result.error ? ` error=${result.error}` : ""}`,
-          );
-        }
-      }),
-    );
+    let config;
+    try {
+      config = readConfig(env);
+    } catch (err) {
+      console.error(`keepalive config error: ${err.message}`);
+      return;
+    }
+    const work = (async () => {
+      const result = await runProbes(config);
+      if (result.ok) {
+        console.log(
+          `keepalive ok: ${config.url} ${result.health.status} in ${result.health.ms}ms` +
+            (result.metrics.configured ? `; metrics ${result.metrics.status} in ${result.metrics.ms}ms` : ""),
+        );
+      } else {
+        console.error(
+          `keepalive failed: health=${result.health.status} in ${result.health.ms}ms` +
+            (result.health.error ? ` error=${result.health.error}` : "") +
+            (result.metrics.configured
+              ? `; metrics=${result.metrics.status} in ${result.metrics.ms}ms${result.metrics.error ? ` error=${result.metrics.error}` : ""}`
+              : ""),
+        );
+      }
+      await sendAlert(config, result);
+    })();
+    ctx.waitUntil(work);
   },
 
   async fetch(_request, env) {
@@ -109,8 +215,15 @@ export default {
         headers: { "content-type": "application/json" },
       });
     }
-    const result = await probe(config.url, config.timeoutMs);
-    return new Response(JSON.stringify(result), {
+    const result = await runProbes(config);
+    return new Response(JSON.stringify({
+      ok: result.ok,
+      status: result.health.status,
+      ms: result.health.ms,
+      error: result.health.error,
+      health: result.health,
+      metrics: result.metrics,
+    }), {
       status: result.ok ? 200 : 502,
       headers: { "content-type": "application/json" },
     });

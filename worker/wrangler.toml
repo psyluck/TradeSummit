@@ -26,3 +26,8 @@ crons = ["*/5 * * * *"]
 # connects to this origin, and /health discloses nothing but its own liveness.
 GATEWAY_HEALTH_URL = "https://tradesummit-gateway-3jw6.onrender.com/health"
 PROBE_TIMEOUT_MS = "10000"
+# Optional: probe /metrics on the same cadence. Leave empty to probe only
+# /health. When set, must match the gateway's GATEWAY_METRICS_TOKEN.
+# GATEWAY_METRICS_TOKEN = ""
+# Optional: HTTPS webhook that receives a JSON alert when a probe fails.
+# ALERT_WEBHOOK_URL = ""
