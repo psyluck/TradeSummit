@@ -90,6 +90,34 @@ same CID Pinata serves:
   either keep it (apex -> www is fine) or delete it from
   "Rules > Redirect Rules" so both hostnames resolve to Pages directly.
 
+## 3b. Cloudflare Free-Tier Cache Rule (static assets)
+
+Create a Cache Rule in the Cloudflare dashboard (Rules > Cache Rules) so static
+assets are served from the edge without waking the Render origin:
+
+- Match: requests whose path matches file extensions `js`, `css`, `ico`, `png`,
+  `svg`, `woff2` (and `woff`, `ttf`, `webp`, `jpg`, `jpeg`) OR paths containing
+  `/assets/`.
+- Action: `Cache Everything`.
+- Edge TTL: 1 month (2592000 seconds).
+- Browser TTL: respect origin (or 1 year for hashed assets).
+
+The origin already emits `Cache-Control: public, max-age=31536000, immutable`
+for these paths (see `_headers` and the nginx config), and `no-store` for HTML
+entry points, JSON payloads, and dynamic routes, so the rule never caches
+dynamic content.
+
+## 3c. Cache-busting / query strings
+
+Static asset references must not carry volatile query parameters (e.g.
+`?v=12345` or timestamps). Version hashes are tied to build artifacts (Vite
+hashed filenames under `/assets/`, IPFS CID for the landing package). Verify
+with:
+
+```
+grep -R "?v=" scripts/out/dist index.html
+```
+
 ## 4. Verify resolution
 
 - `./scripts/check.sh` now treats the Cloudflare leg as a Pages origin: it

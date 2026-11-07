@@ -24,9 +24,10 @@ mkdir -p "$DIST"
 
 # Stage the seven shipped paths from the committed tree (scripts/ is tooling,
 # never part of the package)
-git -C "$ROOT" archive HEAD index.html styles.css main.js assets/logos legal.html | tar -x -C "$DIST"
+git -C "$ROOT" archive HEAD index.html styles.css main.js assets/logos legal.html _headers | tar -x -C "$DIST"
 
-EXPECTED="assets/logos/hyperliquid.svg
+EXPECTED="_headers
+assets/logos/hyperliquid.svg
 assets/logos/tradesummit-mark.svg
 assets/logos/tradesummit.png
 assets/logos/usdc.svg
