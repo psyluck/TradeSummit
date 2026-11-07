@@ -26,11 +26,11 @@ mkdir -p "$DIST"
 # never part of the package)
 git -C "$ROOT" archive HEAD index.html styles.css main.js assets/logos legal.html _headers | tar -x -C "$DIST"
 
-EXPECTED="_headers
-assets/logos/hyperliquid.svg
+EXPECTED="assets/logos/hyperliquid.svg
 assets/logos/tradesummit-mark.svg
 assets/logos/tradesummit.png
 assets/logos/usdc.svg
+_headers
 index.html
 legal.html
 main.js
