@@ -24,7 +24,7 @@ mkdir -p "$DIST"
 
 # Stage the seven shipped paths from the committed tree (scripts/ is tooling,
 # never part of the package)
-git -C "$ROOT" archive HEAD index.html styles.css main.js assets/logos legal.html _headers | tar -x -C "$DIST"
+git -C "$ROOT" archive HEAD index.html styles.css main.js assets/logos legal.html _headers terms.html privacy.html | tar -x -C "$DIST"
 
 EXPECTED="assets/logos/hyperliquid.svg
 assets/logos/tradesummit-mark.svg
@@ -34,7 +34,9 @@ _headers
 index.html
 legal.html
 main.js
-styles.css"
+privacy.html
+styles.css
+terms.html"
 
 # Preflight (a): staged set must be exactly the seven shipped files
 STAGED="$(cd "$DIST" && find . -type f | sort | sed 's|^\./||')"
