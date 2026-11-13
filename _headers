@@ -1,39 +1,17 @@
 # Cloudflare Pages cache headers (free-tier edge optimization).
+#
+# Only content-hashed files under /assets/ may be immutable. styles.css and
+# main.js ship under stable filenames, so they must revalidate; index.html
+# points at them with a ?v= cache-buster because an earlier deploy advertised
+# the unhashed names as immutable for a year.
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
-/*.js
-  Cache-Control: public, max-age=31536000, immutable
+/styles.css
+  Cache-Control: no-cache
 
-/*.css
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.ico
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.png
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.svg
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.woff
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.woff2
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.ttf
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.webp
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.jpg
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.jpeg
-  Cache-Control: public, max-age=31536000, immutable
+/main.js
+  Cache-Control: no-cache
 
 /
   Cache-Control: no-store
