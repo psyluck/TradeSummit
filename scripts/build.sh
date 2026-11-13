@@ -51,8 +51,15 @@ fi
 # endpoints in main.js (CoinGecko/CoinCap) are runtime calls, not assets, and
 # do not match src/href/url() so they are intentionally left alone.
 ASSET_RE="(src|href)=[\"']?(https?:|//)|url\([\"']?(https?:|//)"
-ASSET_EXCEPTIONS='href="https://app.tradesummit.online"'
-if grep -Ern "$ASSET_RE" --include='*.html' --include='*.css' --include='*.js' "$DIST" | grep -Ev -F "$ASSET_EXCEPTIONS"; then
+# Literal allow-list, so the filter below must be fixed-string (`-F`). GNU grep
+# rejects `-E` and `-F` together with exit 2, which an `if` condition reads as
+# "no match" and silently turns this preflight into a no-op. The only absolute
+# references allowed are the outbound navigation links to the app and the source
+# repos; every asset load must stay relative.
+ASSET_EXCEPTIONS='href="https://app.tradesummit.online/"
+href="https://github.com/psyluck/TradeSummit"
+href="https://github.com/psyluck/TradeSummit-core"'
+if grep -Ern "$ASSET_RE" --include='*.html' --include='*.css' --include='*.js' "$DIST" | grep -Fv -- "$ASSET_EXCEPTIONS"; then
   echo "preflight failed: absolute or protocol-slash asset reference found" >&2
   exit 1
 fi
